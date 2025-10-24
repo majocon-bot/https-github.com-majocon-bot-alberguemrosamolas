@@ -51,6 +51,50 @@ export const ROOM_TYPES: RoomType[] = [
   },
 ];
 
+export const SERVICE_TYPES: RoomType[] = [
+  {
+    id: 'small_hall',
+    name: 'SALA PEQUEÑA',
+    description: 'Espacio acogedor para reuniones de hasta 30 personas.',
+    capacity: 30,
+    available: 3,
+    image: 'https://picsum.photos/seed/small_hall/600/400',
+  },
+  {
+    id: 'medium_hall',
+    name: 'SALA MEDIANA',
+    description: 'Perfecta para talleres y presentaciones de hasta 50 personas.',
+    capacity: 50,
+    available: 2,
+    image: 'https://picsum.photos/seed/medium_hall/600/400',
+  },
+  {
+    id: 'large_hall',
+    name: 'SALA GRANDE',
+    description: 'Ideal para eventos y conferencias de hasta 70 personas.',
+    capacity: 70,
+    available: 1,
+    image: 'https://picsum.photos/seed/large_hall/600/400',
+  },
+  {
+    id: 'other_halls',
+    name: 'OTRAS SALAS SALONES',
+    description: 'Salones versátiles para diversas actividades, para 20 personas.',
+    capacity: 20,
+    available: 5,
+    image: 'https://picsum.photos/seed/other_halls/600/400',
+  },
+  {
+    id: 'secretarial_services',
+    name: 'SERVICIOS SECRETARIA',
+    description: 'Soporte administrativo y de secretaría por horas.',
+    capacity: 1, // Represents one person using the service, not a capacity
+    available: 10, // e.g., 10 hours available per day
+    image: 'https://picsum.photos/seed/secretarial/600/400',
+  },
+];
+
+
 export const INDIVIDUAL_ROOMS: IndividualRoom[] = ROOM_TYPES.flatMap(roomType => 
   Array.from({ length: roomType.available }, (_, i) => ({
       id: `${roomType.id}_${i + 1}`,
@@ -58,6 +102,16 @@ export const INDIVIDUAL_ROOMS: IndividualRoom[] = ROOM_TYPES.flatMap(roomType =>
       name: `${roomType.name} ${i + 1}`,
   }))
 );
+
+export const INDIVIDUAL_SERVICES: IndividualRoom[] = SERVICE_TYPES.flatMap(serviceType => 
+  Array.from({ length: serviceType.available }, (_, i) => ({
+      id: `${serviceType.id}_${i + 1}`,
+      type: serviceType.id,
+      name: `${serviceType.name} ${i + 1}`,
+  }))
+);
+
+export const ALL_INDIVIDUAL_ITEMS: IndividualRoom[] = [...INDIVIDUAL_ROOMS, ...INDIVIDUAL_SERVICES];
 
 export const DINING_OPTIONS = [
     { id: 'breakfast', label: 'Desayuno' },

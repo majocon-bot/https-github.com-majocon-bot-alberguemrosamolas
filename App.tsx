@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { RoomSelection, BookingDetails, Reservation, GroupedReservation } from './types';
-import { ROOM_TYPES, INDIVIDUAL_ROOMS, MOCK_RESERVATIONS, DINING_OPTIONS } from './constants';
+import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, MOCK_RESERVATIONS, DINING_OPTIONS } from './constants';
 import RoomTypeCard from './components/RoomTypeCard';
 import BookingSummary from './components/BookingSummary';
 import { generateBookingConfirmation } from './services/geminiService';
@@ -56,18 +56,29 @@ const App: React.FC = () => {
   const [editingGroup, setEditingGroup] = useState<GroupedReservation | null>(null);
 
   const [confirmation, setConfirmation] = useState<{ groupStayName: string; confirmationMessage: string; } | null>(null);
+  
+  const allBookableItems = useMemo(() => [...ROOM_TYPES, ...SERVICE_TYPES], []);
+
 
   const handleCountChange = (roomId: string, newCount: number) => {
     setRoomSelection(prev => ({ ...prev, [roomId]: newCount }));
   };
   
-  const { totalRooms, totalGuests } = useMemo(() => {
-    const rooms = Object.values(roomSelection).reduce((sum: number, count: number) => sum + count, 0);
-    const guests = Object.entries(roomSelection).reduce((sum, [roomId, count]) => {
-      const room = ROOM_TYPES.find(r => r.id === roomId);
-      return sum + (room ? room.capacity * Number(count) : 0);
-    }, 0);
-    return { totalRooms: rooms, totalGuests: guests };
+  const { totalRooms, totalGuests, totalItems } = useMemo(() => {
+    let rooms = 0;
+    let guests = 0;
+    let items = 0;
+
+    Object.entries(roomSelection).forEach(([itemId, count]) => {
+      items += Number(count);
+      const room = ROOM_TYPES.find(r => r.id === itemId);
+      if (room) {
+        rooms += Number(count);
+        guests += room.capacity * Number(count);
+      }
+    });
+    
+    return { totalRooms: rooms, totalGuests: guests, totalItems: items };
   }, [roomSelection]);
   
   const handleProceedToDining = () => {
@@ -79,7 +90,9 @@ const App: React.FC = () => {
           breakfast: 0, lunch: 0, dinner: 0, morningSnack: 0, afternoonSnack: 0
       };
       // Auto-populate breakfast with the total number of guests
-      daySelection.breakfast = totalGuests;
+      if (totalGuests > 0) {
+        daySelection.breakfast = totalGuests;
+      }
       newDining[date] = daySelection;
     }
     
@@ -99,30 +112,31 @@ const App: React.FC = () => {
         : reservations;
 
     const newReservations: Reservation[] = [];
-    let roomsAssigned = true;
+    let itemsAssigned = true;
 
-    for (const [roomTypeId, count] of Object.entries(roomSelection)) {
+    for (const [itemTypeId, count] of Object.entries(roomSelection)) {
       if (Number(count) === 0) continue;
 
-      const availableRooms = INDIVIDUAL_ROOMS.filter(room => room.type === roomTypeId)
-        .filter(room => !baseReservations.some(res => 
-          res.roomId === room.id &&
+      const availableItems = ALL_INDIVIDUAL_ITEMS.filter(item => item.type === itemTypeId)
+        .filter(item => !baseReservations.some(res => 
+          res.roomId === item.id &&
           bookingDetails.checkIn < res.checkOut &&
           bookingDetails.checkOut > res.checkIn
         ));
       
-      if (availableRooms.length < Number(count)) {
-        alert(`No hay suficientes habitaciones de tipo "${ROOM_TYPES.find(rt => rt.id === roomTypeId)?.name}" para las fechas seleccionadas.`);
-        roomsAssigned = false;
+      if (availableItems.length < Number(count)) {
+        const itemDetails = allBookableItems.find(it => it.id === itemTypeId);
+        alert(`No hay suficientes "${itemDetails?.name}" para las fechas seleccionadas.`);
+        itemsAssigned = false;
         break;
       }
       
-      const roomsToBook = availableRooms.slice(0, Number(count));
-      roomsToBook.forEach(room => {
+      const itemsToBook = availableItems.slice(0, Number(count));
+      itemsToBook.forEach(item => {
         newReservations.push({
           id: `res_${Date.now()}_${Math.random()}`,
-          roomId: room.id,
-          roomType: room.type,
+          roomId: item.id,
+          roomType: item.type,
           guestName: bookingDetails.name,
           dni: bookingDetails.dni,
           phone: bookingDetails.phone,
@@ -134,7 +148,7 @@ const App: React.FC = () => {
       });
     }
 
-    if (roomsAssigned) {
+    if (itemsAssigned) {
       setReservations([...baseReservations, ...newReservations]);
       
       if (editingGroup) {
@@ -144,7 +158,7 @@ const App: React.FC = () => {
         setView('reservations');
       } else {
         const fullBooking = { roomSelection, details: bookingDetails };
-        const confirmationData = await generateBookingConfirmation(fullBooking, ROOM_TYPES, totalRooms, totalGuests);
+        const confirmationData = await generateBookingConfirmation(fullBooking, allBookableItems, totalRooms, totalGuests);
         setConfirmation(confirmationData);
         setBookingStep('confirmed');
       }
@@ -167,8 +181,8 @@ const App: React.FC = () => {
     setEditingGroup(group);
 
     const initialSelection: RoomSelection = {};
-    Object.entries(group.roomSummary).forEach(([roomType, count]) => {
-      initialSelection[roomType] = count;
+    Object.entries(group.roomSummary).forEach(([itemType, count]) => {
+      initialSelection[itemType] = count;
     });
     setRoomSelection(initialSelection);
 
@@ -201,9 +215,9 @@ const App: React.FC = () => {
   const getStepDescription = () => {
     switch (bookingStep) {
         case 'rooms':
-            return 'Paso 1: Selecciona tus habitaciones';
+            return 'Paso 1: Selecciona habitaciones, salas y servicios';
         case 'details':
-            return 'Paso 2: Fechas y datos del huésped';
+            return 'Paso 2: Fechas y datos del responsable';
         case 'dining':
             return 'Paso 3: Servicios de comedor y observaciones';
         default:
@@ -214,13 +228,21 @@ const App: React.FC = () => {
   const renderConfirmationScreen = () => {
     if (!confirmation) return null;
 
-    const selectedRoomsSummary = Object.entries(roomSelection)
+    const selectedItemsSummary = Object.entries(roomSelection)
       .filter(([, count]) => Number(count) > 0)
-      .map(([roomId, count]) => {
-        const room = ROOM_TYPES.find(r => r.id === roomId);
-        return { name: room?.name || 'Unknown', count };
+      .map(([itemId, count]) => {
+        const item = allBookableItems.find(i => i.id === itemId);
+        return { 
+            name: item?.name || 'Unknown', 
+            count: Number(count),
+            isService: SERVICE_TYPES.some(st => st.id === itemId) 
+        };
       });
-    
+
+    const roomItems = selectedItemsSummary.filter(item => !item.isService);
+    const serviceItems = selectedItemsSummary.filter(item => item.isService);
+    const totalServices = serviceItems.reduce((sum, item) => sum + item.count, 0);
+
     const diningDates = Object.keys(bookingDetails.dining).sort();
 
     return (
@@ -239,15 +261,34 @@ const App: React.FC = () => {
                 <p><strong>Teléfono:</strong> {bookingDetails.phone}</p>
                 <p><strong>Fechas:</strong> {bookingDetails.checkIn} al {bookingDetails.checkOut}</p>
              </div>
-             <h4 className="text-lg font-bold text-slate-700 mt-4 mb-2">Habitaciones:</h4>
-             <ul className="space-y-2">
-                {selectedRoomsSummary.map(item => (
-                    <li key={item.name} className="flex justify-between items-center text-slate-600">
-                        <span>{item.name}</span>
-                        <span className="font-semibold bg-slate-100 px-2 py-1 rounded">x {item.count}</span>
-                    </li>
-                ))}
-             </ul>
+             
+             {roomItems.length > 0 && (
+                <>
+                    <h4 className="text-lg font-bold text-slate-700 mt-4 mb-2">Habitaciones:</h4>
+                    <ul className="space-y-2">
+                        {roomItems.map(item => (
+                            <li key={item.name} className="flex justify-between items-center text-slate-600">
+                                <span>{item.name}</span>
+                                <span className="font-semibold bg-slate-100 px-2 py-1 rounded">x {item.count}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </>
+             )}
+             
+             {serviceItems.length > 0 && (
+                <>
+                    <h4 className="text-lg font-bold text-slate-700 mt-4 mb-2">Salas y Servicios:</h4>
+                    <ul className="space-y-2">
+                        {serviceItems.map(item => (
+                            <li key={item.name} className="flex justify-between items-center text-slate-600">
+                                <span>{item.name}</span>
+                                <span className="font-semibold bg-slate-100 px-2 py-1 rounded">x {item.count}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </>
+             )}
 
              {diningDates.length > 0 && (
                 <>
@@ -276,9 +317,10 @@ const App: React.FC = () => {
                 </>
             )}
 
-             <div className="mt-4 pt-4 border-t border-slate-200 flex justify-between font-bold text-lg text-slate-800">
-                <span>Total Habitaciones: {totalRooms}</span>
-                <span>Total Huéspedes: {totalGuests}</span>
+            <div className="mt-4 pt-4 border-t border-slate-200 space-y-1 font-bold text-lg text-slate-800">
+                {totalRooms > 0 && <div className="flex justify-between"><span>Total Habitaciones:</span><span>{totalRooms}</span></div>}
+                {totalGuests > 0 && <div className="flex justify-between"><span>Total Huéspedes:</span><span>{totalGuests}</span></div>}
+                {totalServices > 0 && <div className="flex justify-between"><span>Total Servicios:</span><span>{totalServices}</span></div>}
              </div>
           </div>
           
@@ -306,7 +348,7 @@ const App: React.FC = () => {
         {view === 'dashboard' && (
             <DashboardView 
                 reservations={reservations}
-                rooms={INDIVIDUAL_ROOMS}
+                rooms={ALL_INDIVIDUAL_ITEMS}
                 roomTypes={ROOM_TYPES}
                 onNewBooking={() => setView('booking')}
             />
@@ -326,16 +368,32 @@ const App: React.FC = () => {
             <main className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               <div className="lg:col-span-2">
                 {bookingStep === 'rooms' && (
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in-up">
-                    {ROOM_TYPES.map(room => (
-                      <RoomTypeCard
-                        key={room.id}
-                        room={room}
-                        selectedCount={roomSelection[room.id] || 0}
-                        onCountChange={handleCountChange}
-                      />
-                    ))}
-                  </div>
+                   <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in-up">
+                        {ROOM_TYPES.map(room => (
+                        <RoomTypeCard
+                            key={room.id}
+                            room={room}
+                            selectedCount={roomSelection[room.id] || 0}
+                            onCountChange={handleCountChange}
+                        />
+                        ))}
+                    </div>
+
+                    <div className="mt-12">
+                        <h2 className="text-3xl font-bold text-slate-700 mb-6 text-center border-t pt-8">Salas y Servicios Adicionales</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in-up">
+                            {SERVICE_TYPES.map(service => (
+                                <RoomTypeCard
+                                    key={service.id}
+                                    room={service}
+                                    selectedCount={roomSelection[service.id] || 0}
+                                    onCountChange={handleCountChange}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                   </>
                 )}
                 {bookingStep === 'details' && (
                   <BookingDetailsForm details={bookingDetails} setDetails={setBookingDetails} />
@@ -353,14 +411,15 @@ const App: React.FC = () => {
               <div className="lg:col-span-1">
                 <BookingSummary 
                   roomSelection={roomSelection} 
-                  roomTypes={ROOM_TYPES} 
+                  roomTypes={ROOM_TYPES}
+                  serviceTypes={SERVICE_TYPES}
                   totalRooms={totalRooms}
                   totalGuests={totalGuests}
                 />
                 {bookingStep === 'rooms' && (
                   <button
                     onClick={() => setBookingStep('details')}
-                    disabled={totalRooms === 0}
+                    disabled={totalItems === 0}
                     className="w-full mt-8 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                   >
                     Continuar
@@ -416,7 +475,7 @@ const App: React.FC = () => {
           </>
         )}
         {view === 'calendar' && (
-           <OccupancyCalendar rooms={INDIVIDUAL_ROOMS} reservations={reservations} />
+           <OccupancyCalendar rooms={ALL_INDIVIDUAL_ITEMS} reservations={reservations} />
         )}
         {view === 'reservations' && (
            <ReservationsListView 

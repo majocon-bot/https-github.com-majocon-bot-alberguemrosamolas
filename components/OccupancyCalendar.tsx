@@ -14,6 +14,11 @@ const getRoomTypeColor = (type: string): string => {
         case 'quad': return 'bg-purple-100 text-purple-800';
         case 'bunk': return 'bg-orange-100 text-orange-800';
         case 'special': return 'bg-pink-100 text-pink-800';
+        case 'small_hall': return 'bg-gray-200 text-gray-800 font-semibold';
+        case 'medium_hall': return 'bg-gray-300 text-gray-900 font-semibold';
+        case 'large_hall': return 'bg-gray-400 text-white font-semibold';
+        case 'other_halls': return 'bg-stone-200 text-stone-800 font-semibold';
+        case 'secretarial_services': return 'bg-teal-100 text-teal-800 font-semibold';
         default: return 'bg-slate-100 text-slate-800';
     }
 };
@@ -61,7 +66,7 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
         <table className="w-full border-collapse text-center">
           <thead>
             <tr>
-              <th className="sticky left-0 bg-slate-100 p-2 border border-slate-200 z-10 font-semibold text-slate-600 min-w-[150px]">Habitación</th>
+              <th className="sticky left-0 bg-slate-100 p-2 border border-slate-200 z-10 font-semibold text-slate-600 min-w-[150px]">Habitación/Servicio</th>
               {Array.from({ length: daysInMonth }, (_, i) => {
                 const day = i + 1;
                 const date = new Date(year, month, day);

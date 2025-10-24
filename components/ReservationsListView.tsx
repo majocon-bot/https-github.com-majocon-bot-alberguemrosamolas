@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Reservation, DiningSelection, GroupedReservation } from '../types';
-import { ROOM_TYPES, DINING_OPTIONS } from '../constants';
+import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, DINING_OPTIONS } from '../constants';
 import { UserIcon } from './icons/UserIcon';
 import { EditIcon } from './icons/EditIcon';
 import { TrashIcon } from './icons/TrashIcon';
@@ -59,6 +59,7 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
 
     return Object.values(groups)
       .map(group => {
+        // Calculate guests based only on ROOM_TYPES, not services.
         const totalGuests = group.reservations.reduce((sum, res) => {
             const roomType = ROOM_TYPES.find(rt => rt.id === res.roomType);
             return sum + (roomType?.capacity || 0);
@@ -67,10 +68,6 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
       })
       .sort((a, b) => a.minCheckIn.localeCompare(b.minCheckIn));
   }, [reservations]);
-
-  const getRoomTypeName = (typeId: string) => {
-    return ROOM_TYPES.find(rt => rt.id === typeId)?.name || 'Habitación Desconocida';
-  }
 
   return (
     <div className="space-y-8">
@@ -85,30 +82,46 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
             <div key={group.guestName} id={`reservation-${group.guestName}`} className="bg-white p-6 rounded-xl shadow-lg flex flex-col transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
               <div className="flex justify-between items-start mb-2">
                 <h2 className="text-2xl font-bold text-indigo-700">{group.guestName}</h2>
-                <div className="flex items-center space-x-2 no-print">
+                <div className="flex items-center space-x-1 no-print">
                     <button onClick={() => onEditGroup(group)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors" title="Editar Reserva"><EditIcon className="w-5 h-5"/></button>
                     <button onClick={() => onDeleteGroup(group.guestName)} className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors" title="Borrar Grupo"><TrashIcon className="w-5 h-5"/></button>
                     <button onClick={() => handlePrint(group.guestName)} className="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors" title="Imprimir"><PrintIcon className="w-5 h-5"/></button>
                 </div>
               </div>
-              <p className="text-slate-500 mb-4 border-b pb-3">
-                {new Date(group.minCheckIn).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', timeZone: 'UTC' })} &rarr; {new Date(group.maxCheckOut).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })}
-              </p>
+              <div className="text-sm text-slate-500 mb-4 border-b pb-3 space-y-1">
+                <p><strong>Fechas:</strong> {new Date(group.minCheckIn).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', timeZone: 'UTC' })} &rarr; {new Date(group.maxCheckOut).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })}</p>
+                <p><strong>DNI:</strong> {group.reservations[0]?.dni}</p>
+                <p><strong>Teléfono:</strong> {group.reservations[0]?.phone}</p>
+              </div>
               
               <div className="flex-grow space-y-4">
-                <div className="flex justify-between items-center">
-                    <h3 className="font-semibold text-slate-700">Habitaciones</h3>
-                    <div className="flex items-center space-x-2 text-slate-600 font-bold bg-slate-100 px-3 py-1 rounded-full">
-                        <UserIcon className="w-5 h-5"/>
-                        <span>{group.totalGuests}</span>
+                <div>
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-semibold text-slate-700">Habitaciones y Servicios</h3>
+                         {group.totalGuests > 0 && (
+                            <div className="flex items-center space-x-2 text-slate-600 font-bold bg-slate-100 px-3 py-1 rounded-full">
+                                <UserIcon className="w-5 h-5"/>
+                                <span>{group.totalGuests}</span>
+                            </div>
+                        )}
                     </div>
+                    <ul className="list-disc list-inside text-slate-600 text-sm max-h-24 overflow-y-auto bg-slate-50 p-2 rounded-md">
+                        {group.reservations.sort((a,b) => a.roomId.localeCompare(b.roomId)).map(res => {
+                            const itemDetails = ALL_INDIVIDUAL_ITEMS.find(i => i.id === res.roomId);
+                            return <li key={res.id}>{itemDetails?.name || res.roomId}</li>
+                        })}
+                    </ul>
                 </div>
-                <ul className="list-disc list-inside text-slate-600">
-                    {Object.entries(group.roomSummary).map(([roomType, count]) => (
-                        <li key={roomType}>{count} x {getRoomTypeName(roomType)}</li>
-                    ))}
-                </ul>
                 
+                {group.reservations[0]?.observations && (
+                    <div>
+                        <h3 className="font-semibold text-slate-700 mb-1">Observaciones</h3>
+                        <p className="text-sm bg-yellow-50 border border-yellow-200 text-yellow-800 p-2 rounded-md">
+                            {group.reservations[0].observations}
+                        </p>
+                    </div>
+                )}
+
                 <div>
                     <h3 className="font-semibold text-slate-700 mb-2">Servicios de Comedor</h3>
                     {Object.keys(group.diningSummary).length > 0 ? (

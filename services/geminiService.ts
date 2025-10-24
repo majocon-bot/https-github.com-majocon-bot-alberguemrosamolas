@@ -2,20 +2,27 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { FullBooking, RoomType } from "../types";
 import { DINING_OPTIONS } from "../constants";
 
-const generatePrompt = (booking: FullBooking, roomTypes: RoomType[], totalRooms: number, totalGuests: number): string => {
+const generatePrompt = (booking: FullBooking, allItems: RoomType[], totalRooms: number, totalGuests: number): string => {
   const { details, roomSelection } = booking;
 
-  const roomSummary = Object.entries(roomSelection)
+  const itemSummary = Object.entries(roomSelection)
     .filter(([, count]) => count > 0)
-    .map(([roomId, count]) => {
-      const room = roomTypes.find(r => r.id === roomId);
-      return `${count} x ${room?.name || 'Habitación Desconocida'}`;
+    .map(([itemId, count]) => {
+      const item = allItems.find(r => r.id === itemId);
+      return `${count} x ${item?.name || 'Ítem Desconocido'}`;
     })
     .join(', ');
 
-  let prompt = `Actúa como un conserje de hotel creativo. Genera un breve y acogedor mensaje de confirmación para una reserva de grupo a nombre de ${details.name}.
-La reserva es para ${totalGuests} personas en ${totalRooms} habitaciones, desde el ${details.checkIn} hasta el ${details.checkOut}.
-Las habitaciones seleccionadas son: ${roomSummary}.`;
+  let prompt = `Actúa como un conserje de hotel creativo. Genera un breve y acogedor mensaje de confirmación para una reserva de grupo a nombre de ${details.name}.`;
+
+  if (totalGuests > 0) {
+      prompt += `\nLa reserva es para ${totalGuests} personas en ${totalRooms} habitaciones, desde el ${details.checkIn} hasta el ${details.checkOut}.`;
+  } else {
+       prompt += `\nLa reserva es desde el ${details.checkIn} hasta el ${details.checkOut}.`;
+  }
+  
+  prompt += `\nLos elementos seleccionados son: ${itemSummary}.`;
+
 
   const diningSummary = Object.entries(booking.details.dining)
     .map(([date, services]) => {
@@ -54,7 +61,7 @@ Mantén el mensaje cálido, emocionante y personalizado.`;
 
 export const generateBookingConfirmation = async (
   booking: FullBooking,
-  roomTypes: RoomType[],
+  allItems: RoomType[],
   totalRooms: number,
   totalGuests: number
 ): Promise<{ groupStayName: string; confirmationMessage: string; }> => {
@@ -68,7 +75,7 @@ export const generateBookingConfirmation = async (
 
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const prompt = generatePrompt(booking, roomTypes, totalRooms, totalGuests);
+    const prompt = generatePrompt(booking, allItems, totalRooms, totalGuests);
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
