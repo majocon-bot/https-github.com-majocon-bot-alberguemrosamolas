@@ -1,0 +1,86 @@
+import React, { useState, useMemo } from 'react';
+import { IndividualRoom, Reservation } from '../types';
+
+interface OccupancyCalendarProps {
+  rooms: IndividualRoom[];
+  reservations: Reservation[];
+}
+
+const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservations }) => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  const { year, month, daysInMonth, firstDayOfMonth } = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0=Sunday, 1=Monday...
+    return { year, month, daysInMonth, firstDayOfMonth };
+  }, [currentDate]);
+
+  const goToPreviousMonth = () => {
+    setCurrentDate(new Date(year, month - 1, 1));
+  };
+
+  const goToNextMonth = () => {
+    setCurrentDate(new Date(year, month + 1, 1));
+  };
+
+  const isRoomBooked = (roomId: string, day: number) => {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return reservations.some(res => 
+      res.roomId === roomId &&
+      dateStr >= res.checkIn &&
+      dateStr < res.checkOut
+    );
+  };
+  
+  const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-lg">
+      <div className="flex justify-between items-center mb-6">
+        <button onClick={goToPreviousMonth} className="px-4 py-2 bg-slate-200 rounded-lg hover:bg-slate-300">&lt;</button>
+        <h2 className="text-2xl font-bold text-slate-800">
+          {new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(currentDate)}
+        </h2>
+        <button onClick={goToNextMonth} className="px-4 py-2 bg-slate-200 rounded-lg hover:bg-slate-300">&gt;</button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-center">
+          <thead>
+            <tr>
+              <th className="sticky left-0 bg-slate-100 p-2 border border-slate-200 z-10 font-semibold text-slate-600">Habitación</th>
+              {Array.from({ length: daysInMonth }, (_, i) => {
+                const day = i + 1;
+                const date = new Date(year, month, day);
+                const dayOfWeek = date.getDay();
+                return <th key={i} className="p-2 border border-slate-200 min-w-[50px]">
+                  <div className="text-sm text-slate-500">{weekDays[dayOfWeek]}</div>
+                  <div className="font-semibold text-slate-700">{day}</div>
+                </th>
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {rooms.map(room => (
+              <tr key={room.id}>
+                <td className="sticky left-0 bg-white p-2 border border-slate-200 z-10 text-sm text-left text-slate-700 font-medium">{room.name}</td>
+                {Array.from({ length: daysInMonth }, (_, i) => {
+                  const day = i + 1;
+                  const isBooked = isRoomBooked(room.id, day);
+                  return (
+                    <td key={i} className={`p-2 border border-slate-200 ${isBooked ? 'bg-red-300' : 'bg-green-200'}`} title={isBooked ? 'Ocupado' : 'Disponible'}>
+                        &nbsp;
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default OccupancyCalendar;
