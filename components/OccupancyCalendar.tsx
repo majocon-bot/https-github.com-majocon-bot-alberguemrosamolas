@@ -6,6 +6,19 @@ interface OccupancyCalendarProps {
   reservations: Reservation[];
 }
 
+const getRoomTypeColor = (type: string): string => {
+    switch (type) {
+        case 'single': return 'bg-blue-100 text-blue-800';
+        case 'double': return 'bg-green-100 text-green-800';
+        case 'triple': return 'bg-yellow-100 text-yellow-800';
+        case 'quad': return 'bg-purple-100 text-purple-800';
+        case 'bunk': return 'bg-orange-100 text-orange-800';
+        case 'special': return 'bg-pink-100 text-pink-800';
+        default: return 'bg-slate-100 text-slate-800';
+    }
+};
+
+
 const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservations }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -63,7 +76,9 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
           <tbody>
             {rooms.map(room => (
               <tr key={room.id}>
-                <td className="sticky left-0 bg-white p-2 border border-slate-200 z-10 text-sm text-left text-slate-700 font-medium whitespace-nowrap">{room.name}</td>
+                <td className={`sticky left-0 p-2 border-slate-200 z-10 text-sm text-left font-medium whitespace-nowrap ${getRoomTypeColor(room.type)}`}>
+                    {room.name}
+                </td>
                 {Array.from({ length: daysInMonth }, (_, i) => {
                   const day = i + 1;
                   const booking = getBookingForRoomAndDay(room.id, day);
@@ -71,7 +86,7 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
                   return (
                     <td 
                         key={i} 
-                        className={`p-1 border border-slate-200 text-xs text-center align-middle whitespace-nowrap overflow-hidden text-ellipsis ${isBooked ? 'bg-indigo-200 text-indigo-900 font-semibold' : 'bg-green-200'}`} 
+                        className={`p-1 border border-slate-200 text-xs text-center align-middle whitespace-nowrap overflow-hidden text-ellipsis ${isBooked ? 'bg-indigo-200 text-indigo-900 font-semibold' : 'bg-green-100/50'}`} 
                         title={isBooked ? `Ocupado por ${booking.guestName}` : 'Disponible'}
                     >
                         {booking?.guestName}
