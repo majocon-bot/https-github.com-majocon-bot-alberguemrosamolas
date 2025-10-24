@@ -23,8 +23,9 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({ details, setDet
             newDetails.checkOut = nextDay.toISOString().split('T')[0];
         }
         
-        // When dates change, reset dining options
+        // When dates change, reset dining and other services options
         newDetails.dining = {};
+        newDetails.otherServices = {};
         setDetails(newDetails);
     };
 
