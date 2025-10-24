@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Reservation, DiningSelection, GroupedReservation } from '../types';
+import { Reservation, DiningSelection, GroupedReservation, TimeSlot } from '../types';
 import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, DINING_OPTIONS } from '../constants';
 import { UserIcon } from './icons/UserIcon';
 import { EditIcon } from './icons/EditIcon';
@@ -58,8 +58,11 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
           if (!group.otherServicesSummary[date]) {
             group.otherServicesSummary[date] = {};
           }
-          Object.entries(services).forEach(([serviceId, count]) => {
-             group.otherServicesSummary[date][serviceId] = (group.otherServicesSummary[date][serviceId] || 0) + count;
+          Object.entries(services).forEach(([serviceId, timeSlots]) => {
+            if (!group.otherServicesSummary[date][serviceId]) {
+              group.otherServicesSummary[date][serviceId] = [];
+            }
+            group.otherServicesSummary[date][serviceId].push(...timeSlots);
           });
         });
       }
@@ -139,19 +142,21 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
                   {Object.keys(group.otherServicesSummary).length > 0 ? (
                       <div className="text-sm max-h-32 overflow-y-auto bg-slate-50 p-2 rounded-md space-y-2">
                          {Object.entries(group.otherServicesSummary).sort(([dateA], [dateB]) => dateA.localeCompare(dateB)).map(([date, services]) => {
-                             const dailyServices = Object.entries(services).filter(([, count]) => count > 0);
+                             const dailyServices = Object.entries(services).filter(([, slots]) => slots.length > 0);
                              if (dailyServices.length === 0) return null;
                              return (
                               <div key={date}>
                                   <p className="font-medium text-slate-600">{new Date(date).toLocaleDateString('es-ES', { month: 'long', day: 'numeric', timeZone: 'UTC' })}:</p>
-                                  <p className="pl-2 text-slate-500">
-                                      {dailyServices
-                                          .map(([serviceId, count]) => {
-                                              const serviceName = SERVICE_TYPES.find(opt => opt.id === serviceId)?.name || serviceId;
-                                              return `${serviceName} (x${count})`;
-                                          })
-                                          .join(', ')}
-                                  </p>
+                                  <ul className="list-disc list-inside ml-2 text-slate-500">
+                                      {dailyServices.map(([serviceId, slots]) => {
+                                          const serviceName = SERVICE_TYPES.find(opt => opt.id === serviceId)?.name || serviceId;
+                                          return (
+                                              <li key={serviceId}>{serviceName}:
+                                                <span className="font-mono"> {slots.map(s => `${s.startTime}-${s.endTime}`).join(', ')}</span>
+                                              </li>
+                                          )
+                                      })}
+                                  </ul>
                               </div>
                              )
                          })}

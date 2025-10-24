@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
-import { BookingDetails, RoomSelection } from '../types';
+import { BookingDetails, RoomSelection, TimeSlot } from '../types';
 import { SERVICE_TYPES } from '../constants';
+import { PlusIcon } from './icons/PlusIcon';
+import { TrashIcon } from './icons/TrashIcon';
 
 interface BookingOtherServicesFormProps {
   details: BookingDetails;
@@ -13,7 +15,6 @@ const getDatesInRange = (startDate: string, endDate: string): string[] => {
     let currentDate = new Date(startDate);
     const stopDate = new Date(endDate);
     
-    // Ensure we don't get stuck in an infinite loop and date is valid
     if (stopDate <= currentDate || isNaN(currentDate.getTime())) return [];
 
     while (currentDate < stopDate) {
@@ -33,19 +34,38 @@ const BookingOtherServicesForm: React.FC<BookingOtherServicesFormProps> = ({ det
     const selectedServices = useMemo(() => {
         return SERVICE_TYPES.filter(service => (roomSelection[service.id] || 0) > 0);
     }, [roomSelection]);
-
-    const handleServiceChange = (date: string, serviceId: string, value: number) => {
-        const maxAllowed = roomSelection[serviceId] || 0;
-        const count = Math.max(0, Math.min(value, maxAllowed));
-        setDetails(prev => {
-            const newOtherServices = { ...(prev.otherServices || {}) };
-            const daySelection = newOtherServices[date] || {};
-            daySelection[serviceId] = count;
-            newOtherServices[date] = daySelection;
-            return { ...prev, otherServices: newOtherServices };
-        });
-    };
     
+    const updateOtherServices = (date: string, serviceId: string, newSlots: TimeSlot[]) => {
+        setDetails(prev => ({
+            ...prev,
+            otherServices: {
+                ...prev.otherServices,
+                [date]: {
+                    ...prev.otherServices[date],
+                    [serviceId]: newSlots
+                }
+            }
+        }));
+    };
+
+    const handleAddSlot = (date: string, serviceId: string) => {
+        const currentSlots = details.otherServices?.[date]?.[serviceId] || [];
+        const newSlots = [...currentSlots, { startTime: '', endTime: '' }];
+        updateOtherServices(date, serviceId, newSlots);
+    };
+
+    const handleRemoveSlot = (date: string, serviceId: string, indexToRemove: number) => {
+        const currentSlots = details.otherServices?.[date]?.[serviceId] || [];
+        const newSlots = currentSlots.filter((_, index) => index !== indexToRemove);
+        updateOtherServices(date, serviceId, newSlots);
+    };
+
+    const handleTimeChange = (date: string, serviceId: string, index: number, field: 'startTime' | 'endTime', value: string) => {
+        const currentSlots = details.otherServices?.[date]?.[serviceId] || [];
+        const newSlots = currentSlots.map((slot, i) => i === index ? { ...slot, [field]: value } : slot);
+        updateOtherServices(date, serviceId, newSlots);
+    };
+
     if (selectedServices.length === 0) {
         return (
              <div className="bg-white p-8 rounded-xl shadow-lg text-center animate-fade-in-up">
@@ -60,28 +80,58 @@ const BookingOtherServicesForm: React.FC<BookingOtherServicesFormProps> = ({ det
              <fieldset>
                 <legend className="text-2xl font-bold text-slate-800 mb-4">Uso de Salas y Servicios</legend>
                  <p className="text-sm text-slate-500 mb-4">
-                    Especifica cuántas unidades de cada servicio necesitarás por día.
+                    Especifica los horarios de uso para cada servicio. Puedes añadir tantos tramos como unidades hayas reservado.
                 </p>
-                <div className="space-y-4">
+                <div className="space-y-6">
                     {stayDates.map(date => (
-                        <div key={date} className="bg-slate-50 p-4 rounded-md">
-                            <p className="font-semibold text-slate-700 mb-3">{new Date(date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}</p>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                {selectedServices.map(service => (
-                                    <div key={service.id}>
-                                        <label htmlFor={`${date}-${service.id}`} className="block text-sm font-medium text-slate-600 mb-1">{service.name}</label>
-                                        <input 
-                                            type="number" 
-                                            id={`${date}-${service.id}`}
-                                            name={`${date}-${service.id}`}
-                                            value={details.otherServices?.[date]?.[service.id] || 0}
-                                            onChange={(e) => handleServiceChange(date, service.id, parseInt(e.target.value, 10) || 0)}
-                                            min="0"
-                                            max={roomSelection[service.id]}
-                                            className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        />
-                                    </div>
-                                ))}
+                        <div key={date} className="bg-slate-50 p-4 rounded-lg">
+                            <p className="font-semibold text-slate-700 mb-3 text-lg">{new Date(date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}</p>
+                            <div className="space-y-4">
+                                {selectedServices.map(service => {
+                                    const maxSlots = roomSelection[service.id] || 0;
+                                    const currentSlots = details.otherServices?.[date]?.[service.id] || [];
+                                    return (
+                                        <div key={service.id} className="bg-white p-3 rounded-md shadow-sm">
+                                            <label className="block text-md font-medium text-slate-800 mb-2">{service.name} ({currentSlots.length}/{maxSlots} uds.)</label>
+                                            <div className="space-y-2">
+                                                {currentSlots.map((slot, index) => (
+                                                    <div key={index} className="flex items-center gap-2">
+                                                        <input 
+                                                            type="time"
+                                                            value={slot.startTime}
+                                                            onChange={e => handleTimeChange(date, service.id, index, 'startTime', e.target.value)}
+                                                            className="w-full px-2 py-1 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                        />
+                                                        <span className="text-slate-500">-</span>
+                                                        <input 
+                                                            type="time"
+                                                            value={slot.endTime}
+                                                            onChange={e => handleTimeChange(date, service.id, index, 'endTime', e.target.value)}
+                                                            min={slot.startTime}
+                                                            className="w-full px-2 py-1 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                        />
+                                                        <button
+                                                            onClick={() => handleRemoveSlot(date, service.id, index)}
+                                                            className="p-1.5 text-red-500 hover:bg-red-100 rounded-full transition-colors"
+                                                            title="Eliminar tramo"
+                                                        >
+                                                            <TrashIcon className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {currentSlots.length < maxSlots && (
+                                                <button
+                                                    onClick={() => handleAddSlot(date, service.id)}
+                                                    className="mt-2 flex items-center gap-1 text-sm text-indigo-600 font-semibold hover:text-indigo-800"
+                                                >
+                                                    <PlusIcon className="w-4 h-4" />
+                                                    Añadir horario
+                                                </button>
+                                            )}
+                                        </div>
+                                    )
+                                })}
                             </div>
                         </div>
                     ))}

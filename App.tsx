@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { RoomSelection, BookingDetails, Reservation, GroupedReservation } from './types';
+import { RoomSelection, BookingDetails, Reservation, GroupedReservation, TimeSlot } from './types';
 import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, MOCK_RESERVATIONS, DINING_OPTIONS } from './constants';
 import RoomTypeCard from './components/RoomTypeCard';
 import BookingSummary from './components/BookingSummary';
@@ -117,8 +117,8 @@ const App: React.FC = () => {
         newOtherServices[date] = {};
       }
       for(const serviceId of selectedServices) {
-          if (newOtherServices[date][serviceId] === undefined) {
-             newOtherServices[date][serviceId] = 0;
+          if (!newOtherServices[date][serviceId]) {
+             newOtherServices[date][serviceId] = [];
           }
       }
     }
@@ -328,7 +328,7 @@ const App: React.FC = () => {
                 <div className="max-h-40 overflow-y-auto space-y-3 bg-slate-50 p-3 rounded-md">
                 {otherServicesDates.map(date => {
                     const services = Object.entries(bookingDetails.otherServices[date])
-                        .filter(([, quantity]) => (quantity as number) > 0);
+                        .filter(([, slots]) => (slots as TimeSlot[]).length > 0);
                     if (services.length === 0) return null;
                     
                     return (
@@ -337,9 +337,13 @@ const App: React.FC = () => {
                         {new Date(date).toLocaleDateString('es-ES', { weekday: 'short', month: 'long', day: 'numeric', timeZone: 'UTC' })}
                         </p>
                         <ul className="text-sm list-disc list-inside ml-2">
-                        {services.map(([serviceId, quantity]) => {
+                        {services.map(([serviceId, slots]) => {
                             const serviceLabel = SERVICE_TYPES.find(opt => opt.id === serviceId)?.name || serviceId;
-                            return <li key={serviceId}>{serviceLabel}: {quantity} ud.</li>
+                            return (
+                                <li key={serviceId}>{serviceLabel}: 
+                                    {(slots as TimeSlot[]).map((slot, i) => ` ${slot.startTime}-${slot.endTime}`).join(', ')}
+                                </li>
+                            )
                         })}
                         </ul>
                     </div>

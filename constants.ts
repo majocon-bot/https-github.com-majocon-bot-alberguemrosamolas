@@ -181,8 +181,17 @@ export const MOCK_RESERVATIONS: Reservation[] = [
       [formatDate(new Date(today.getFullYear(), today.getMonth(), 8))]: { breakfast: 2, lunch: 2, dinner: 2, morningSnack: 2, afternoonSnack: 2 },
     },
     otherServices: {
-        [formatDate(new Date(today.getFullYear(), today.getMonth(), 7))]: { 'small_hall': 1, 'secretarial_services': 2 },
-        [formatDate(new Date(today.getFullYear(), today.getMonth(), 8))]: { 'small_hall': 1, 'secretarial_services': 1 },
+        [formatDate(new Date(today.getFullYear(), today.getMonth(), 7))]: {
+            'small_hall': [{ startTime: '10:00', endTime: '13:00' }],
+            'secretarial_services': [
+                { startTime: '09:00', endTime: '11:00' },
+                { startTime: '15:00', endTime: '16:00' }
+            ]
+        },
+        [formatDate(new Date(today.getFullYear(), today.getMonth(), 8))]: {
+            'small_hall': [{ startTime: '10:00', endTime: '18:00' }],
+            'secretarial_services': [{ startTime: '09:00', endTime: '12:00' }]
+        },
     }
   },
    { 
