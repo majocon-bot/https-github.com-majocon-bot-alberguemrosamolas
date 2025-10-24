@@ -67,3 +67,13 @@ export interface GroupedReservation {
   totalGuests: number;
   reservations: Reservation[]; // Keep track of original reservations
 }
+
+export interface ServiceBooking {
+  guestName: string;
+  date: string;
+  serviceId: string;
+  serviceName: string;
+  quantity: number;
+  price?: number;
+  priceUnit?: 'per_day' | 'per_hour' | 'one_time';
+}

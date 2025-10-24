@@ -12,8 +12,9 @@ import BookingOtherServicesForm from './components/BookingOtherServicesForm';
 import DiningHallView from './components/DiningHallView';
 import ReservationsListView from './components/ReservationsListView';
 import DashboardView from './components/DashboardView';
+import ServicesListView from './components/ServicesListView';
 
-type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'dining';
+type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'dining';
 type BookingStep = 'rooms' | 'details' | 'dining' | 'other_services' | 'loading' | 'confirmed';
 
 const today = new Date();
@@ -560,6 +561,9 @@ const App: React.FC = () => {
               onDeleteGroup={handleDeleteGroup}
               onEditGroup={handleStartEdit}
             />
+        )}
+        {view === 'services' && (
+           <ServicesListView reservations={reservations} />
         )}
         {view === 'dining' && (
            <DiningHallView reservations={reservations} />
