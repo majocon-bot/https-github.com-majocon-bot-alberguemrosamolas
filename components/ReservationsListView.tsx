@@ -86,9 +86,9 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
               <div className="flex justify-between items-start mb-2">
                 <h2 className="text-2xl font-bold text-indigo-700">{group.guestName}</h2>
                 <div className="flex items-center space-x-2 no-print">
-                    <button onClick={() => onEditGroup(group)} className="p-2 text-slate-500 hover:bg-slate-200 rounded-full" title="Editar Reserva"><EditIcon className="w-5 h-5"/></button>
-                    <button onClick={() => onDeleteGroup(group.guestName)} className="p-2 text-slate-500 hover:bg-slate-200 rounded-full" title="Borrar Grupo"><TrashIcon className="w-5 h-5"/></button>
-                    <button onClick={() => handlePrint(group.guestName)} className="p-2 text-slate-500 hover:bg-slate-200 rounded-full" title="Imprimir"><PrintIcon className="w-5 h-5"/></button>
+                    <button onClick={() => onEditGroup(group)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors" title="Editar Reserva"><EditIcon className="w-5 h-5"/></button>
+                    <button onClick={() => onDeleteGroup(group.guestName)} className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors" title="Borrar Grupo"><TrashIcon className="w-5 h-5"/></button>
+                    <button onClick={() => handlePrint(group.guestName)} className="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors" title="Imprimir"><PrintIcon className="w-5 h-5"/></button>
                 </div>
               </div>
               <p className="text-slate-500 mb-4 border-b pb-3">
