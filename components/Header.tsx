@@ -3,8 +3,9 @@ import { CalendarIcon } from './icons/CalendarIcon';
 import { ListIcon } from './icons/ListIcon';
 import { DiningIcon } from './icons/DiningIcon';
 import { ClipboardIcon } from './icons/ClipboardIcon';
+import { HomeIcon } from './icons/HomeIcon';
 
-type View = 'booking' | 'calendar' | 'reservations' | 'dining';
+type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'dining';
 
 interface HeaderProps {
   currentView: View;
@@ -20,9 +21,17 @@ const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
     <header className="bg-white shadow-md">
       <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
         <div className="text-2xl font-bold text-slate-800">
-          Hotel System
+          Albergue Mª Rosa Molas
         </div>
         <div className="flex space-x-2 md:space-x-4">
+          <button
+            onClick={() => setView('dashboard')}
+            className={`${baseClasses} ${currentView === 'dashboard' ? activeClasses : inactiveClasses}`}
+            aria-current={currentView === 'dashboard' ? 'page' : undefined}
+          >
+            <HomeIcon className="w-5 h-5" />
+            <span className="hidden md:inline">Dashboard</span>
+          </button>
           <button
             onClick={() => setView('booking')}
             className={`${baseClasses} ${currentView === 'booking' ? activeClasses : inactiveClasses}`}

@@ -10,8 +10,9 @@ import BookingDetailsForm from './components/BookingDetailsForm';
 import BookingDiningForm from './components/BookingDiningForm';
 import DiningHallView from './components/DiningHallView';
 import ReservationsListView from './components/ReservationsListView';
+import DashboardView from './components/DashboardView';
 
-type View = 'booking' | 'calendar' | 'reservations' | 'dining';
+type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'dining';
 type BookingStep = 'rooms' | 'details' | 'dining' | 'loading' | 'confirmed';
 
 const today = new Date();
@@ -45,7 +46,7 @@ const getDatesInRange = (startDate: string, endDate: string): string[] => {
 };
 
 const App: React.FC = () => {
-  const [view, setView] = useState<View>('booking');
+  const [view, setView] = useState<View>('dashboard');
   const [bookingStep, setBookingStep] = useState<BookingStep>('rooms');
   
   const [roomSelection, setRoomSelection] = useState<RoomSelection>({});
@@ -302,6 +303,14 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-100">
       <Header currentView={view} setView={setView} />
       <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+        {view === 'dashboard' && (
+            <DashboardView 
+                reservations={reservations}
+                rooms={INDIVIDUAL_ROOMS}
+                roomTypes={ROOM_TYPES}
+                onNewBooking={() => setView('booking')}
+            />
+        )}
         {view === 'booking' && (
           <>
             <header className="text-center mb-12">
