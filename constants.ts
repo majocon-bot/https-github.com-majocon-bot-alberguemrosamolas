@@ -59,6 +59,8 @@ export const SERVICE_TYPES: RoomType[] = [
     capacity: 30,
     available: 3,
     image: 'https://picsum.photos/seed/small_hall/600/400',
+    price: 33,
+    priceUnit: 'per_day',
   },
   {
     id: 'medium_hall',
@@ -67,6 +69,8 @@ export const SERVICE_TYPES: RoomType[] = [
     capacity: 50,
     available: 2,
     image: 'https://picsum.photos/seed/medium_hall/600/400',
+    price: 55,
+    priceUnit: 'per_day',
   },
   {
     id: 'large_hall',
@@ -75,6 +79,8 @@ export const SERVICE_TYPES: RoomType[] = [
     capacity: 70,
     available: 1,
     image: 'https://picsum.photos/seed/large_hall/600/400',
+    price: 77,
+    priceUnit: 'per_day',
   },
   {
     id: 'other_halls',
@@ -83,6 +89,8 @@ export const SERVICE_TYPES: RoomType[] = [
     capacity: 20,
     available: 5,
     image: 'https://picsum.photos/seed/other_halls/600/400',
+    price: 22,
+    priceUnit: 'per_day',
   },
   {
     id: 'secretarial_services',
@@ -91,6 +99,8 @@ export const SERVICE_TYPES: RoomType[] = [
     capacity: 1, // Represents one person using the service, not a capacity
     available: 10, // e.g., 10 hours available per day
     image: 'https://picsum.photos/seed/secretarial/600/400',
+    price: 0.077,
+    priceUnit: 'per_hour',
   },
 ];
 

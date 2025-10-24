@@ -5,6 +5,8 @@ export interface RoomType {
   capacity: number;
   available: number;
   image: string;
+  price?: number;
+  priceUnit?: 'per_day' | 'per_hour' | 'one_time';
 }
 
 export interface RoomSelection {
@@ -27,6 +29,7 @@ export interface BookingDetails {
   checkOut: string;
   observations: string;
   dining: { [date: string]: DiningSelection };
+  otherServices: { [date: string]: { [serviceId: string]: number } };
 }
 
 export interface FullBooking {
@@ -45,6 +48,7 @@ export interface Reservation {
   checkIn: string; // YYYY-MM-DD
   checkOut: string; // YYYY-MM-DD
   dining?: { [date: string]: DiningSelection };
+  otherServices?: { [date: string]: { [serviceId: string]: number } };
 }
 
 export interface IndividualRoom {
@@ -59,6 +63,7 @@ export interface GroupedReservation {
   maxCheckOut: string;
   roomSummary: { [roomType: string]: number };
   diningSummary: { [date: string]: DiningSelection };
+  otherServicesSummary: { [date: string]: { [serviceId: string]: number } };
   totalGuests: number;
   reservations: Reservation[]; // Keep track of original reservations
 }

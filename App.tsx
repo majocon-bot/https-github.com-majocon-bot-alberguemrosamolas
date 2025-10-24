@@ -8,12 +8,13 @@ import Header from './components/Header';
 import OccupancyCalendar from './components/OccupancyCalendar';
 import BookingDetailsForm from './components/BookingDetailsForm';
 import BookingDiningForm from './components/BookingDiningForm';
+import BookingOtherServicesForm from './components/BookingOtherServicesForm';
 import DiningHallView from './components/DiningHallView';
 import ReservationsListView from './components/ReservationsListView';
 import DashboardView from './components/DashboardView';
 
 type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'dining';
-type BookingStep = 'rooms' | 'details' | 'dining' | 'loading' | 'confirmed';
+type BookingStep = 'rooms' | 'details' | 'dining' | 'other_services' | 'loading' | 'confirmed';
 
 const today = new Date();
 const tomorrow = new Date(today);
@@ -29,6 +30,7 @@ const initialDetails: BookingDetails = {
     checkOut: formatDate(tomorrow),
     observations: '',
     dining: {},
+    otherServices: {},
 };
 
 const getDatesInRange = (startDate: string, endDate: string): string[] => {
@@ -104,6 +106,30 @@ const App: React.FC = () => {
     setBookingStep('dining');
   };
 
+  const handleProceedToOtherServices = () => {
+    const stayDates = getDatesInRange(bookingDetails.checkIn, bookingDetails.checkOut);
+    const newOtherServices = { ...(bookingDetails.otherServices || {}) };
+    const selectedServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id) && (roomSelection[id] || 0) > 0);
+
+    for (const date of stayDates) {
+      if (!newOtherServices[date]) {
+        newOtherServices[date] = {};
+      }
+      for(const serviceId of selectedServices) {
+          if (newOtherServices[date][serviceId] === undefined) {
+             newOtherServices[date][serviceId] = 0;
+          }
+      }
+    }
+    
+    setBookingDetails(prev => ({
+      ...prev,
+      otherServices: newOtherServices
+    }));
+    
+    setBookingStep('other_services');
+  };
+
   const handleSaveBooking = async () => {
     setBookingStep('loading');
 
@@ -144,6 +170,7 @@ const App: React.FC = () => {
           checkIn: bookingDetails.checkIn,
           checkOut: bookingDetails.checkOut,
           dining: bookingDetails.dining,
+          otherServices: bookingDetails.otherServices,
         });
       });
     }
@@ -196,6 +223,7 @@ const App: React.FC = () => {
         checkOut: group.maxCheckOut,
         observations: firstRes.observations,
         dining: group.diningSummary,
+        otherServices: group.otherServicesSummary,
       });
     }
 
@@ -219,7 +247,9 @@ const App: React.FC = () => {
         case 'details':
             return 'Paso 2: Fechas y datos del responsable';
         case 'dining':
-            return 'Paso 3: Servicios de comedor y observaciones';
+            return 'Paso 3: Servicios de comedor';
+        case 'other_services':
+            return 'Paso 4: Detallar uso de salas y servicios';
         default:
             return '';
     }
@@ -244,6 +274,7 @@ const App: React.FC = () => {
     const totalServices = serviceItems.reduce((sum, item) => sum + item.count, 0);
 
     const diningDates = Object.keys(bookingDetails.dining).sort();
+    const otherServicesDates = Object.keys(bookingDetails.otherServices || {}).sort();
 
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
@@ -289,6 +320,33 @@ const App: React.FC = () => {
                     </ul>
                 </>
              )}
+
+            {otherServicesDates.length > 0 && (
+                <>
+                <h4 className="text-lg font-bold text-slate-700 mt-4 mb-2">Uso de Salas y Servicios:</h4>
+                <div className="max-h-40 overflow-y-auto space-y-3 bg-slate-50 p-3 rounded-md">
+                {otherServicesDates.map(date => {
+                    const services = Object.entries(bookingDetails.otherServices[date])
+                        .filter(([, quantity]) => (quantity as number) > 0);
+                    if (services.length === 0) return null;
+                    
+                    return (
+                    <div key={date}>
+                        <p className="font-semibold text-slate-600 text-sm">
+                        {new Date(date).toLocaleDateString('es-ES', { weekday: 'short', month: 'long', day: 'numeric', timeZone: 'UTC' })}
+                        </p>
+                        <ul className="text-sm list-disc list-inside ml-2">
+                        {services.map(([serviceId, quantity]) => {
+                            const serviceLabel = SERVICE_TYPES.find(opt => opt.id === serviceId)?.name || serviceId;
+                            return <li key={serviceId}>{serviceLabel}: {quantity} ud.</li>
+                        })}
+                        </ul>
+                    </div>
+                    );
+                })}
+                </div>
+                </>
+            )}
 
              {diningDates.length > 0 && (
                 <>
@@ -401,6 +459,9 @@ const App: React.FC = () => {
                 {bookingStep === 'dining' && (
                   <BookingDiningForm details={bookingDetails} setDetails={setBookingDetails} totalGuests={totalGuests} />
                 )}
+                {bookingStep === 'other_services' && (
+                    <BookingOtherServicesForm details={bookingDetails} setDetails={setBookingDetails} roomSelection={roomSelection} />
+                )}
                  {(bookingStep === 'loading') && (
                   <div className="h-96 flex items-center justify-center bg-white rounded-xl shadow-lg">
                      <p className="text-2xl text-slate-600 animate-pulse">{isEditing ? 'Actualizando reserva...' : 'Confirmando y asignando habitaciones...'}</p>
@@ -446,6 +507,22 @@ const App: React.FC = () => {
                   <div className="mt-8 flex space-x-4">
                     <button
                       onClick={() => setBookingStep('details')}
+                      className="w-1/2 bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-lg text-lg hover:bg-slate-300 transition-all duration-300 shadow-md"
+                    >
+                      Atrás
+                    </button>
+                    <button
+                      onClick={handleProceedToOtherServices}
+                      className="w-1/2 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md"
+                    >
+                      Continuar
+                    </button>
+                  </div>
+                 )}
+                 {bookingStep === 'other_services' && (
+                  <div className="mt-8 flex space-x-4">
+                    <button
+                      onClick={() => setBookingStep('dining')}
                       className="w-1/2 bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-lg text-lg hover:bg-slate-300 transition-all duration-300 shadow-md"
                     >
                       Atrás

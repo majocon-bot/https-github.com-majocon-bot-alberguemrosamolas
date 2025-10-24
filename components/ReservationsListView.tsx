@@ -29,6 +29,7 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
           maxCheckOut: res.checkOut,
           roomSummary: {},
           diningSummary: {},
+          otherServicesSummary: {},
           totalGuests: 0,
           reservations: [],
         };
@@ -48,6 +49,17 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
           }
           Object.entries(services).forEach(([service, count]) => {
             group.diningSummary[date][service as keyof DiningSelection] += count;
+          });
+        });
+      }
+
+      if (res.otherServices) {
+        Object.entries(res.otherServices).forEach(([date, services]) => {
+          if (!group.otherServicesSummary[date]) {
+            group.otherServicesSummary[date] = {};
+          }
+          Object.entries(services).forEach(([serviceId, count]) => {
+             group.otherServicesSummary[date][serviceId] = (group.otherServicesSummary[date][serviceId] || 0) + count;
           });
         });
       }
@@ -121,6 +133,33 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
                         </p>
                     </div>
                 )}
+                
+                <div>
+                  <h3 className="font-semibold text-slate-700 mb-2">Uso de Salas y Servicios</h3>
+                  {Object.keys(group.otherServicesSummary).length > 0 ? (
+                      <div className="text-sm max-h-32 overflow-y-auto bg-slate-50 p-2 rounded-md space-y-2">
+                         {Object.entries(group.otherServicesSummary).sort(([dateA], [dateB]) => dateA.localeCompare(dateB)).map(([date, services]) => {
+                             const dailyServices = Object.entries(services).filter(([, count]) => count > 0);
+                             if (dailyServices.length === 0) return null;
+                             return (
+                              <div key={date}>
+                                  <p className="font-medium text-slate-600">{new Date(date).toLocaleDateString('es-ES', { month: 'long', day: 'numeric', timeZone: 'UTC' })}:</p>
+                                  <p className="pl-2 text-slate-500">
+                                      {dailyServices
+                                          .map(([serviceId, count]) => {
+                                              const serviceName = SERVICE_TYPES.find(opt => opt.id === serviceId)?.name || serviceId;
+                                              return `${serviceName} (x${count})`;
+                                          })
+                                          .join(', ')}
+                                  </p>
+                              </div>
+                             )
+                         })}
+                      </div>
+                  ) : (
+                      <p className="text-sm text-slate-400 italic">Sin uso detallado de servicios.</p>
+                  )}
+                </div>
 
                 <div>
                     <h3 className="font-semibold text-slate-700 mb-2">Servicios de Comedor</h3>
