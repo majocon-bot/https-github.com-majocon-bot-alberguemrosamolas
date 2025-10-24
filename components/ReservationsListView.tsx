@@ -93,105 +93,134 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
 
       {groupedReservations.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-          {groupedReservations.map(group => (
-            <div key={group.guestName} id={`reservation-${group.guestName}`} className="bg-white p-6 rounded-xl shadow-lg flex flex-col transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
-              <div className="flex justify-between items-start mb-2">
-                <h2 className="text-2xl font-bold text-indigo-700">{group.guestName}</h2>
-                <div className="flex items-center space-x-1 no-print">
-                    <button onClick={() => onEditGroup(group)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors" title="Editar Reserva"><EditIcon className="w-5 h-5"/></button>
-                    <button onClick={() => onDeleteGroup(group.guestName)} className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors" title="Borrar Grupo"><TrashIcon className="w-5 h-5"/></button>
-                    <button onClick={() => handlePrint(group.guestName)} className="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors" title="Imprimir"><PrintIcon className="w-5 h-5"/></button>
+          {groupedReservations.map(group => {
+            const roomReservations = group.reservations.filter(res => ROOM_TYPES.some(rt => rt.id === res.roomType));
+            const serviceReservations = group.reservations.filter(res => SERVICE_TYPES.some(st => st.id === res.roomType));
+            
+            return (
+              <div key={group.guestName} id={`reservation-${group.guestName}`} className="bg-white p-6 rounded-xl shadow-lg flex flex-col transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
+                <div className="flex justify-between items-start mb-2">
+                  <h2 className="text-2xl font-bold text-indigo-700">{group.guestName}</h2>
+                  <div className="flex items-center space-x-1 no-print">
+                      <button onClick={() => onEditGroup(group)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors" title="Editar Reserva"><EditIcon className="w-5 h-5"/></button>
+                      <button onClick={() => onDeleteGroup(group.guestName)} className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors" title="Borrar Grupo"><TrashIcon className="w-5 h-5"/></button>
+                      <button onClick={() => handlePrint(group.guestName)} className="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors" title="Imprimir"><PrintIcon className="w-5 h-5"/></button>
+                  </div>
                 </div>
-              </div>
-              <div className="text-sm text-slate-500 mb-4 border-b pb-3 space-y-1">
-                <p><strong>Fechas:</strong> {new Date(group.minCheckIn).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', timeZone: 'UTC' })} &rarr; {new Date(group.maxCheckOut).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })}</p>
-                <p><strong>DNI:</strong> {group.reservations[0]?.dni}</p>
-                <p><strong>Teléfono:</strong> {group.reservations[0]?.phone}</p>
-              </div>
-              
-              <div className="flex-grow space-y-4">
-                <div>
-                    <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-semibold text-slate-700">Habitaciones y Servicios</h3>
-                         {group.totalGuests > 0 && (
-                            <div className="flex items-center space-x-2 text-slate-600 font-bold bg-slate-100 px-3 py-1 rounded-full">
-                                <UserIcon className="w-5 h-5"/>
-                                <span>{group.totalGuests}</span>
-                            </div>
-                        )}
-                    </div>
-                    <ul className="list-disc list-inside text-slate-600 text-sm max-h-24 overflow-y-auto bg-slate-50 p-2 rounded-md">
-                        {group.reservations.sort((a,b) => a.roomId.localeCompare(b.roomId)).map(res => {
-                            const itemDetails = ALL_INDIVIDUAL_ITEMS.find(i => i.id === res.roomId);
-                            return <li key={res.id}>{itemDetails?.name || res.roomId}</li>
-                        })}
-                    </ul>
+                <div className="text-sm text-slate-500 mb-4 border-b pb-3 space-y-1">
+                  <p><strong>Fechas:</strong> {new Date(group.minCheckIn).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', timeZone: 'UTC' })} &rarr; {new Date(group.maxCheckOut).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })}</p>
+                  <p><strong>DNI:</strong> {group.reservations[0]?.dni}</p>
+                  <p><strong>Teléfono:</strong> {group.reservations[0]?.phone}</p>
                 </div>
                 
-                {group.reservations[0]?.observations && (
-                    <div>
-                        <h3 className="font-semibold text-slate-700 mb-1">Observaciones</h3>
-                        <p className="text-sm bg-yellow-50 border border-yellow-200 text-yellow-800 p-2 rounded-md">
-                            {group.reservations[0].observations}
-                        </p>
-                    </div>
-                )}
-                
-                <div>
-                  <h3 className="font-semibold text-slate-700 mb-2">Uso de Salas y Servicios</h3>
-                  {Object.keys(group.otherServicesSummary).length > 0 ? (
-                      <div className="text-sm max-h-32 overflow-y-auto bg-slate-50 p-2 rounded-md space-y-2">
-                         {Object.entries(group.otherServicesSummary).sort(([dateA], [dateB]) => dateA.localeCompare(dateB)).map(([date, services]) => {
-                             const dailyServices = Object.entries(services).filter(([, slots]) => slots.length > 0);
-                             if (dailyServices.length === 0) return null;
-                             return (
-                              <div key={date}>
-                                  <p className="font-medium text-slate-600">{new Date(date).toLocaleDateString('es-ES', { month: 'long', day: 'numeric', timeZone: 'UTC' })}:</p>
-                                  <ul className="list-disc list-inside ml-2 text-slate-500">
-                                      {dailyServices.map(([serviceId, slots]) => {
-                                          const serviceName = SERVICE_TYPES.find(opt => opt.id === serviceId)?.name || serviceId;
-                                          return (
-                                              <li key={serviceId}>{serviceName}:
-                                                <span className="font-mono"> {slots.map(s => `${s.startTime}-${s.endTime}`).join(', ')}</span>
-                                              </li>
-                                          )
-                                      })}
-                                  </ul>
+                <div className="flex-grow flex flex-col space-y-4">
+                  {/* --- ROOMS SECTION --- */}
+                  <div>
+                      <div className="flex justify-between items-center mb-2">
+                          <h3 className="font-semibold text-slate-700">Habitaciones</h3>
+                           {group.totalGuests > 0 && (
+                              <div className="flex items-center space-x-2 text-slate-600 font-bold bg-slate-100 px-3 py-1 rounded-full">
+                                  <UserIcon className="w-5 h-5"/>
+                                  <span>{group.totalGuests}</span>
                               </div>
-                             )
-                         })}
+                          )}
                       </div>
-                  ) : (
-                      <p className="text-sm text-slate-400 italic">Sin uso detallado de servicios.</p>
+                      {roomReservations.length > 0 ? (
+                        <ul className="list-disc list-inside text-slate-600 text-sm max-h-24 overflow-y-auto bg-slate-50 p-2 rounded-md">
+                            {roomReservations.sort((a,b) => a.roomId.localeCompare(b.roomId)).map(res => {
+                                const itemDetails = ALL_INDIVIDUAL_ITEMS.find(i => i.id === res.roomId);
+                                return <li key={res.id}>{itemDetails?.name || res.roomId}</li>
+                            })}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-slate-400 italic">Sin habitaciones asignadas.</p>
+                      )}
+                  </div>
+                  
+                  {group.reservations[0]?.observations && (
+                      <div>
+                          <h3 className="font-semibold text-slate-700 mb-1">Observaciones</h3>
+                          <p className="text-sm bg-yellow-50 border border-yellow-200 text-yellow-800 p-2 rounded-md">
+                              {group.reservations[0].observations}
+                          </p>
+                      </div>
+                  )}
+                  
+                  {/* --- SEPARATOR & SERVICES SECTION --- */}
+                  {(serviceReservations.length > 0 || Object.keys(group.otherServicesSummary).length > 0 || Object.keys(group.diningSummary).length > 0) && (
+                    <>
+                      <hr className="!my-3 border-slate-200" />
+                      
+                      {serviceReservations.length > 0 && (
+                        <div>
+                            <h3 className="font-semibold text-slate-700">Salas y Servicios Asignados</h3>
+                            <ul className="list-disc list-inside text-slate-600 text-sm max-h-24 overflow-y-auto bg-slate-50 p-2 rounded-md">
+                                {serviceReservations.sort((a,b) => a.roomId.localeCompare(b.roomId)).map(res => {
+                                    const itemDetails = ALL_INDIVIDUAL_ITEMS.find(i => i.id === res.roomId);
+                                    return <li key={res.id}>{itemDetails?.name || res.roomId}</li>
+                                })}
+                            </ul>
+                        </div>
+                      )}
+                      
+                      <div>
+                        <h3 className="font-semibold text-slate-700 mb-2">Uso de Salas y Servicios</h3>
+                        {Object.keys(group.otherServicesSummary).length > 0 ? (
+                            <div className="text-sm max-h-32 overflow-y-auto bg-slate-50 p-2 rounded-md space-y-2">
+                              {Object.entries(group.otherServicesSummary).sort(([dateA], [dateB]) => dateA.localeCompare(dateB)).map(([date, services]) => {
+                                  const dailyServices = Object.entries(services).filter(([, slots]) => slots.length > 0);
+                                  if (dailyServices.length === 0) return null;
+                                  return (
+                                    <div key={date}>
+                                        <p className="font-medium text-slate-600">{new Date(date).toLocaleDateString('es-ES', { month: 'long', day: 'numeric', timeZone: 'UTC' })}:</p>
+                                        <ul className="list-disc list-inside ml-2 text-slate-500">
+                                            {dailyServices.map(([serviceId, slots]) => {
+                                                const serviceName = SERVICE_TYPES.find(opt => opt.id === serviceId)?.name || serviceId;
+                                                return (
+                                                    <li key={serviceId}>{serviceName}:
+                                                      <span className="font-mono"> {slots.map(s => `${s.startTime}-${s.endTime}`).join(', ')}</span>
+                                                    </li>
+                                                )
+                                            })}
+                                        </ul>
+                                    </div>
+                                  )
+                              })}
+                            </div>
+                        ) : (
+                            <p className="text-sm text-slate-400 italic">Sin uso detallado de servicios.</p>
+                        )}
+                      </div>
+
+                      <div>
+                          <h3 className="font-semibold text-slate-700 mb-2">Servicios de Comedor</h3>
+                          {Object.keys(group.diningSummary).length > 0 ? (
+                              <div className="text-sm max-h-32 overflow-y-auto bg-slate-50 p-2 rounded-md space-y-2">
+                                {Object.entries(group.diningSummary).sort(([dateA], [dateB]) => dateA.localeCompare(dateB)).map(([date, services]) => (
+                                      <div key={date}>
+                                          <p className="font-medium text-slate-600">{new Date(date).toLocaleDateString('es-ES', { month: 'long', day: 'numeric', timeZone: 'UTC' })}:</p>
+                                          <p className="pl-2 text-slate-500">
+                                              {Object.entries(services)
+                                                  .filter(([, count]) => count > 0)
+                                                  .map(([service, count]) => {
+                                                      const serviceName = DINING_OPTIONS.find(opt => opt.id === service)?.label || service;
+                                                      return `${serviceName} (x${count})`;
+                                                  })
+                                                  .join(', ')}
+                                          </p>
+                                      </div>
+                                ))}
+                              </div>
+                          ) : (
+                              <p className="text-sm text-slate-400 italic">Sin servicios de comedor.</p>
+                          )}
+                      </div>
+                    </>
                   )}
                 </div>
-
-                <div>
-                    <h3 className="font-semibold text-slate-700 mb-2">Servicios de Comedor</h3>
-                    {Object.keys(group.diningSummary).length > 0 ? (
-                        <div className="text-sm max-h-32 overflow-y-auto bg-slate-50 p-2 rounded-md space-y-2">
-                           {Object.entries(group.diningSummary).sort(([dateA], [dateB]) => dateA.localeCompare(dateB)).map(([date, services]) => (
-                                <div key={date}>
-                                    <p className="font-medium text-slate-600">{new Date(date).toLocaleDateString('es-ES', { month: 'long', day: 'numeric', timeZone: 'UTC' })}:</p>
-                                    <p className="pl-2 text-slate-500">
-                                        {Object.entries(services)
-                                            .filter(([, count]) => count > 0)
-                                            .map(([service, count]) => {
-                                                const serviceName = DINING_OPTIONS.find(opt => opt.id === service)?.label || service;
-                                                return `${serviceName} (x${count})`;
-                                            })
-                                            .join(', ')}
-                                    </p>
-                                </div>
-                           ))}
-                        </div>
-                    ) : (
-                        <p className="text-sm text-slate-400 italic">Sin servicios de comedor.</p>
-                    )}
-                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       ) : (
         <div className="text-center py-16 bg-white rounded-xl shadow-lg">
