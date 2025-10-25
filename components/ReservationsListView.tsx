@@ -33,8 +33,10 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
           minCheckIn: res.checkIn,
           maxCheckOut: res.checkOut,
           roomSummary: {},
-          diningSummary: {},
-          otherServicesSummary: {},
+          // Assign dining and other services info from the first reservation of the group,
+          // as it's duplicated across all reservations for that group booking.
+          diningSummary: res.dining || {},
+          otherServicesSummary: res.otherServices || {},
           totalGuests: 0,
           reservations: [],
         };
@@ -47,31 +49,6 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
 
       group.roomSummary[res.roomType] = (group.roomSummary[res.roomType] || 0) + 1;
       
-      if (res.dining) {
-        Object.entries(res.dining).forEach(([date, services]) => {
-          if (!group.diningSummary[date]) {
-            group.diningSummary[date] = { breakfast: 0, lunch: 0, dinner: 0, morningSnack: 0, afternoonSnack: 0 };
-          }
-          Object.entries(services).forEach(([service, count]) => {
-            group.diningSummary[date][service as keyof DiningSelection] += count;
-          });
-        });
-      }
-
-      if (res.otherServices) {
-        Object.entries(res.otherServices).forEach(([date, services]) => {
-          if (!group.otherServicesSummary[date]) {
-            group.otherServicesSummary[date] = {};
-          }
-          Object.entries(services).forEach(([serviceId, timeSlots]) => {
-            if (!group.otherServicesSummary[date][serviceId]) {
-              group.otherServicesSummary[date][serviceId] = [];
-            }
-            group.otherServicesSummary[date][serviceId].push(...timeSlots);
-          });
-        });
-      }
-
       group.reservations.push(res);
 
       return acc;

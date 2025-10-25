@@ -24,7 +24,17 @@ const DiningHallView: React.FC<DiningHallViewProps> = ({ reservations }) => {
       afternoonSnack: 0,
     };
 
-    reservations.forEach(res => {
+    // Group reservations by guest to avoid multiple counting for the same group booking
+    // FIX: Add explicit type annotation to `reservationsByGuest` to ensure correct type inference.
+    const reservationsByGuest: Record<string, Reservation> = reservations.reduce((acc, res) => {
+        if (!acc[res.guestName]) {
+            acc[res.guestName] = res; // Store the first reservation for each guest
+        }
+        return acc;
+    }, {} as Record<string, Reservation>);
+
+
+    Object.values(reservationsByGuest).forEach(res => {
       // Check if reservation is active on the selected date
       if (res.checkIn <= selectedDate && res.checkOut > selectedDate) {
         if (res.dining && res.dining[selectedDate]) {
@@ -42,12 +52,20 @@ const DiningHallView: React.FC<DiningHallViewProps> = ({ reservations }) => {
   }, [selectedDate, reservations]);
 
   const guestsForDate = useMemo(() => {
-    return reservations.filter(res => 
-      res.checkIn <= selectedDate && res.checkOut > selectedDate &&
-      res.dining && res.dining[selectedDate] && 
-      // FIX: Cast `count` to a number to satisfy TypeScript, as Object.values can infer `unknown`.
-      Object.values(res.dining[selectedDate]).some(count => (count as number) > 0)
-    );
+    const uniqueGuests: { [guestName: string]: Reservation } = {};
+    reservations.forEach(res => {
+        if (
+            res.checkIn <= selectedDate && res.checkOut > selectedDate &&
+            res.dining && res.dining[selectedDate] &&
+            Object.values(res.dining[selectedDate]).some(count => (count as number) > 0)
+        ) {
+            // Only add the guest once to the list
+            if (!uniqueGuests[res.guestName]) {
+                uniqueGuests[res.guestName] = res;
+            }
+        }
+    });
+    return Object.values(uniqueGuests);
   }, [selectedDate, reservations]);
 
 
