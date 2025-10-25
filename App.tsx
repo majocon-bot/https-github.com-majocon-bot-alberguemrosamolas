@@ -68,37 +68,28 @@ const App: React.FC = () => {
   };
   
   const { totalRooms, totalGuests, totalItems, totalServices } = useMemo(() => {
-    const totals = {
-        rooms: 0,
-        guests: 0,
-        items: 0,
-        services: 0,
-    };
+    const selectionEntries = Object.entries(roomSelection);
 
-    for (const itemId in roomSelection) {
-        if (Object.prototype.hasOwnProperty.call(roomSelection, itemId)) {
-            const count = roomSelection[itemId] ?? 0;
-            if (count > 0) {
-                totals.items += count;
-                const roomType = ROOM_TYPES.find(r => r.id === itemId);
-                if (roomType) {
-                    totals.rooms += count;
-                    totals.guests += (roomType.capacity || 0) * count;
-                } else {
-                    const serviceType = SERVICE_TYPES.find(s => s.id === itemId);
-                    if (serviceType) {
-                        totals.services += count;
-                    }
-                }
-            }
-        }
-    }
-    
-    return { 
-        totalRooms: totals.rooms, 
-        totalGuests: totals.guests, 
-        totalItems: totals.items, 
-        totalServices: totals.services 
+    const roomsCount = selectionEntries
+      .filter(([itemId]) => ROOM_TYPES.some(rt => rt.id === itemId))
+      .reduce((sum, [, count]) => sum + (Number(count) || 0), 0);
+      
+    const guestsCount = selectionEntries
+      .filter(([itemId]) => ROOM_TYPES.some(rt => rt.id === itemId))
+      .reduce((sum, [itemId, count]) => {
+        const roomType = ROOM_TYPES.find(rt => rt.id === itemId)!;
+        return sum + roomType.capacity * (Number(count) || 0);
+      }, 0);
+
+    const servicesCount = selectionEntries
+      .filter(([itemId]) => SERVICE_TYPES.some(st => st.id === itemId))
+      .reduce((sum, [, count]) => sum + (Number(count) || 0), 0);
+
+    return {
+      totalRooms: roomsCount,
+      totalGuests: guestsCount,
+      totalServices: servicesCount,
+      totalItems: roomsCount + servicesCount,
     };
   }, [roomSelection]);
   
