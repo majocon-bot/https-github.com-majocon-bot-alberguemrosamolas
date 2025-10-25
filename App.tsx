@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { RoomSelection, BookingDetails, Reservation, GroupedReservation, TimeSlot } from './types';
+import { RoomSelection, BookingDetails, Reservation, GroupedReservation, GroupedReservationWithCost, TimeSlot } from './types';
 import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, MOCK_RESERVATIONS, DINING_OPTIONS } from './constants';
 import RoomTypeCard from './components/RoomTypeCard';
 import BookingSummary from './components/BookingSummary';
@@ -13,8 +13,9 @@ import DiningHallView from './components/DiningHallView';
 import ReservationsListView from './components/ReservationsListView';
 import DashboardView from './components/DashboardView';
 import ServicesListView from './components/ServicesListView';
+import InvoiceView from './components/InvoiceView';
 
-type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'dining';
+type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'dining' | 'invoice';
 type BookingStep = 'options' | 'dining' | 'schedule' | 'loading' | 'confirmed';
 
 const today = new Date();
@@ -57,6 +58,8 @@ const App: React.FC = () => {
   
   const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS);
   const [editingGroup, setEditingGroup] = useState<GroupedReservation | null>(null);
+  const [invoiceData, setInvoiceData] = useState<GroupedReservationWithCost | null>(null);
+
 
   const [confirmation, setConfirmation] = useState<{ groupStayName: string; confirmationMessage: string; } | null>(null);
   
@@ -252,6 +255,11 @@ const App: React.FC = () => {
 
     setView('booking');
     setBookingStep('options');
+  };
+
+  const handleGenerateInvoice = (group: GroupedReservationWithCost) => {
+    setInvoiceData(group);
+    setView('invoice');
   };
 
   const handleStartOver = () => {
@@ -578,6 +586,7 @@ const App: React.FC = () => {
               reservations={reservations} 
               onDeleteGroup={handleDeleteGroup}
               onEditGroup={handleStartEdit}
+              onGenerateInvoice={handleGenerateInvoice}
             />
         )}
         {view === 'services' && (
@@ -585,6 +594,9 @@ const App: React.FC = () => {
         )}
         {view === 'dining' && (
            <DiningHallView reservations={reservations} />
+        )}
+        {view === 'invoice' && invoiceData && (
+          <InvoiceView group={invoiceData} onBack={() => setView('reservations')} />
         )}
       </div>
     </div>

@@ -1,23 +1,21 @@
 import React, { useMemo } from 'react';
-import { Reservation, DiningSelection, GroupedReservation, TimeSlot } from '../types';
+import { Reservation, DiningSelection, GroupedReservation, TimeSlot, GroupedReservationWithCost } from '../types';
 import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, DINING_OPTIONS } from '../constants';
 import { UserIcon } from './icons/UserIcon';
 import { EditIcon } from './icons/EditIcon';
 import { TrashIcon } from './icons/TrashIcon';
 import { PrintIcon } from './icons/PrintIcon';
+import { InvoiceIcon } from './icons/InvoiceIcon';
 
 interface ReservationsListViewProps {
   reservations: Reservation[];
   onDeleteGroup: (guestName: string) => void;
   onEditGroup: (group: GroupedReservation) => void;
-}
-
-interface GroupedReservationWithCost extends GroupedReservation {
-  totalCost: number;
+  onGenerateInvoice: (group: GroupedReservationWithCost) => void;
 }
 
 
-const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservations, onDeleteGroup, onEditGroup }) => {
+const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservations, onDeleteGroup, onEditGroup, onGenerateInvoice }) => {
 
   const handlePrint = (guestName: string) => {
     document.querySelectorAll('.printable-area').forEach(el => el.classList.remove('printable-area'));
@@ -137,7 +135,8 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
                         <div className="flex items-center space-x-1 no-print">
                             <button onClick={() => onEditGroup(group)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors" title="Editar Reserva"><EditIcon className="w-5 h-5"/></button>
                             <button onClick={() => onDeleteGroup(group.guestName)} className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors" title="Borrar Grupo"><TrashIcon className="w-5 h-5"/></button>
-                            <button onClick={() => handlePrint(group.guestName)} className="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors" title="Imprimir"><PrintIcon className="w-5 h-5"/></button>
+                            <button onClick={() => handlePrint(group.guestName)} className="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors" title="Imprimir Resumen"><PrintIcon className="w-5 h-5"/></button>
+                             <button onClick={() => onGenerateInvoice(group)} className="p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors" title="Generar Factura"><InvoiceIcon className="w-5 h-5"/></button>
                         </div>
                     </div>
                     <div className="text-right flex-shrink-0 pl-2">

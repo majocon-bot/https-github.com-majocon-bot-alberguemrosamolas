@@ -73,6 +73,10 @@ export interface GroupedReservation {
   reservations: Reservation[]; // Keep track of original reservations
 }
 
+export interface GroupedReservationWithCost extends GroupedReservation {
+  totalCost: number;
+}
+
 export interface ServiceBooking {
   guestName: string;
   date: string;
