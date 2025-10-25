@@ -8,6 +8,8 @@ export const ROOM_TYPES: RoomType[] = [
     capacity: 4,
     available: 6,
     image: 'https://picsum.photos/seed/quad/600/400',
+    price: 80,
+    priceUnit: 'per_day',
   },
   {
     id: 'double',
@@ -16,6 +18,8 @@ export const ROOM_TYPES: RoomType[] = [
     capacity: 2,
     available: 4,
     image: 'https://picsum.photos/seed/double/600/400',
+    price: 60,
+    priceUnit: 'per_day',
   },
   {
     id: 'single',
@@ -24,6 +28,8 @@ export const ROOM_TYPES: RoomType[] = [
     capacity: 1,
     available: 30,
     image: 'https://picsum.photos/seed/single/600/400',
+    price: 40,
+    priceUnit: 'per_day',
   },
   {
     id: 'bunk',
@@ -32,6 +38,8 @@ export const ROOM_TYPES: RoomType[] = [
     capacity: 4,
     available: 8,
     image: 'https://picsum.photos/seed/bunk/600/400',
+    price: 70,
+    priceUnit: 'per_day',
   },
   {
     id: 'triple',
@@ -40,6 +48,8 @@ export const ROOM_TYPES: RoomType[] = [
     capacity: 3,
     available: 2,
     image: 'https://picsum.photos/seed/triple/600/400',
+    price: 75,
+    priceUnit: 'per_day',
   },
   {
     id: 'special',
@@ -48,6 +58,8 @@ export const ROOM_TYPES: RoomType[] = [
     capacity: 3,
     available: 2,
     image: 'https://picsum.photos/seed/special/600/400',
+    price: 85,
+    priceUnit: 'per_day',
   },
 ];
 
@@ -99,7 +111,7 @@ export const SERVICE_TYPES: RoomType[] = [
     capacity: 1, // Represents one person using the service, not a capacity
     available: 10, // e.g., 10 hours available per day
     image: 'https://picsum.photos/seed/secretarial/600/400',
-    price: 0.077,
+    price: 10, // Adjusted price for easier calculation
     priceUnit: 'per_hour',
   },
 ];
@@ -124,11 +136,11 @@ export const INDIVIDUAL_SERVICES: IndividualRoom[] = SERVICE_TYPES.flatMap(servi
 export const ALL_INDIVIDUAL_ITEMS: IndividualRoom[] = [...INDIVIDUAL_ROOMS, ...INDIVIDUAL_SERVICES];
 
 export const DINING_OPTIONS = [
-    { id: 'breakfast', label: 'Desayuno' },
-    { id: 'lunch', label: 'Comida' },
-    { id: 'dinner', label: 'Cena' },
-    { id: 'morningSnack', label: 'Tomar Mañana' },
-    { id: 'afternoonSnack', label: 'Tomar Merienda' }
+    { id: 'breakfast', label: 'Desayuno', price: 8 },
+    { id: 'lunch', label: 'Comida', price: 15 },
+    { id: 'dinner', label: 'Cena', price: 12 },
+    { id: 'morningSnack', label: 'Tomar Mañana', price: 4 },
+    { id: 'afternoonSnack', label: 'Tomar Merienda', price: 4 }
 ] as const; // Use const assertion for type safety
 
 const today = new Date();

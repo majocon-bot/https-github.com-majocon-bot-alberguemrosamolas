@@ -105,6 +105,21 @@ const ServicesListView: React.FC<ServicesListViewProps> = ({ reservations }) => 
     return { hours, formatted: `${h}h ${m > 0 ? `${m}m` : ''}`.trim() };
   };
 
+  const grandTotal = useMemo(() => {
+    return serviceBookings.reduce((sum, booking) => {
+        const duration = calculateDuration(booking.startTime, booking.endTime);
+        let total = 0;
+        if (booking.price) {
+            if (booking.priceUnit === 'per_hour') {
+                total = booking.price * duration.hours;
+            } else {
+                total = booking.price;
+            }
+        }
+        return sum + total;
+    }, 0);
+  }, [serviceBookings]);
+
 
   return (
     <div className="space-y-8 animate-fade-in-up">
@@ -156,12 +171,20 @@ const ServicesListView: React.FC<ServicesListViewProps> = ({ reservations }) => 
                                 {booking.price ? formatPriceUnit(booking.price, booking.priceUnit) : '-'}
                             </td>
                             <td className="px-6 py-4 text-right font-semibold text-slate-700">
-                                {total.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                                {total > 0 ? total.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) : '-'}
                             </td>
                         </tr>
                     )
                 })}
               </tbody>
+              <tfoot>
+                <tr className="font-semibold text-slate-900 bg-slate-100 border-t-2 border-slate-300">
+                    <th scope="row" colSpan={7} className="px-6 py-3 text-right text-base">Total General</th>
+                    <td className="px-6 py-3 text-right text-base">
+                        {grandTotal.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                    </td>
+                </tr>
+              </tfoot>
             </table>
           ) : (
              <div className="text-center py-16">

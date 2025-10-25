@@ -15,7 +15,7 @@ import DashboardView from './components/DashboardView';
 import ServicesListView from './components/ServicesListView';
 
 type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'dining';
-type BookingStep = 'rooms' | 'details' | 'dining' | 'other_services' | 'loading' | 'confirmed';
+type BookingStep = 'options' | 'dining' | 'schedule' | 'loading' | 'confirmed';
 
 const today = new Date();
 const tomorrow = new Date(today);
@@ -50,7 +50,7 @@ const getDatesInRange = (startDate: string, endDate: string): string[] => {
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>('dashboard');
-  const [bookingStep, setBookingStep] = useState<BookingStep>('rooms');
+  const [bookingStep, setBookingStep] = useState<BookingStep>('options');
   
   const [roomSelection, setRoomSelection] = useState<RoomSelection>({});
   const [bookingDetails, setBookingDetails] = useState<BookingDetails>(initialDetails);
@@ -67,10 +67,11 @@ const App: React.FC = () => {
     setRoomSelection(prev => ({ ...prev, [roomId]: newCount }));
   };
   
-  const { totalRooms, totalGuests, totalItems } = useMemo(() => {
+  const { totalRooms, totalGuests, totalItems, totalServices } = useMemo(() => {
     let rooms = 0;
     let guests = 0;
     let items = 0;
+    let services = 0;
 
     Object.entries(roomSelection).forEach(([itemId, count]) => {
       items += Number(count);
@@ -79,56 +80,67 @@ const App: React.FC = () => {
         rooms += Number(count);
         guests += room.capacity * Number(count);
       }
+      const service = SERVICE_TYPES.find(s => s.id === itemId);
+      if (service) {
+        services += Number(count);
+      }
     });
     
-    return { totalRooms: rooms, totalGuests: guests, totalItems: items };
+    return { totalRooms: rooms, totalGuests: guests, totalItems: items, totalServices: services };
   }, [roomSelection]);
   
-  const handleProceedToDining = () => {
-    const stayDates = getDatesInRange(bookingDetails.checkIn, bookingDetails.checkOut);
-    const newDining = { ...bookingDetails.dining };
-    
-    for (const date of stayDates) {
-      const daySelection = newDining[date] || {
-          breakfast: 0, lunch: 0, dinner: 0, morningSnack: 0, afternoonSnack: 0
-      };
-      // Auto-populate breakfast with the total number of guests
-      if (totalGuests > 0) {
-        daySelection.breakfast = totalGuests;
-      }
-      newDining[date] = daySelection;
-    }
-    
-    setBookingDetails(prev => ({
-      ...prev,
-      dining: newDining
-    }));
-    
-    setBookingStep('dining');
-  };
-
-  const handleProceedToOtherServices = () => {
-    const stayDates = getDatesInRange(bookingDetails.checkIn, bookingDetails.checkOut);
-    const newOtherServices = { ...(bookingDetails.otherServices || {}) };
-    const selectedServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id) && (roomSelection[id] || 0) > 0);
-
-    for (const date of stayDates) {
-      if (!newOtherServices[date]) {
-        newOtherServices[date] = {};
-      }
-      for(const serviceId of selectedServices) {
-          if (!newOtherServices[date][serviceId]) {
-             newOtherServices[date][serviceId] = [];
+  const handleNextStep = () => {
+      if (bookingStep === 'options') {
+          if (totalRooms > 0) {
+              const stayDates = getDatesInRange(bookingDetails.checkIn, bookingDetails.checkOut);
+              const newDining = { ...bookingDetails.dining };
+              for (const date of stayDates) {
+                const daySelection = newDining[date] || { breakfast: 0, lunch: 0, dinner: 0, morningSnack: 0, afternoonSnack: 0 };
+                if (totalGuests > 0) daySelection.breakfast = totalGuests;
+                newDining[date] = daySelection;
+              }
+              setBookingDetails(prev => ({ ...prev, dining: newDining }));
+              setBookingStep('dining');
+          } else if (totalServices > 0) {
+              const stayDates = getDatesInRange(bookingDetails.checkIn, bookingDetails.checkOut);
+              const newOtherServices = { ...(bookingDetails.otherServices || {}) };
+              const selectedServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id) && (roomSelection[id] || 0) > 0);
+              for (const date of stayDates) {
+                  if (!newOtherServices[date]) newOtherServices[date] = {};
+                  for(const serviceId of selectedServices) {
+                      if (!newOtherServices[date][serviceId]) newOtherServices[date][serviceId] = [];
+                  }
+              }
+              setBookingDetails(prev => ({ ...prev, otherServices: newOtherServices }));
+              setBookingStep('schedule');
+          }
+      } else if (bookingStep === 'dining') {
+          if (totalServices > 0) {
+              const stayDates = getDatesInRange(bookingDetails.checkIn, bookingDetails.checkOut);
+              const newOtherServices = { ...(bookingDetails.otherServices || {}) };
+              const selectedServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id) && (roomSelection[id] || 0) > 0);
+              for (const date of stayDates) {
+                  if (!newOtherServices[date]) newOtherServices[date] = {};
+                  for(const serviceId of selectedServices) {
+                      if (!newOtherServices[date][serviceId]) newOtherServices[date][serviceId] = [];
+                  }
+              }
+              setBookingDetails(prev => ({ ...prev, otherServices: newOtherServices }));
+              setBookingStep('schedule');
           }
       }
-    }
-    
-    setBookingDetails(prev => ({
-      ...prev,
-      otherServices: newOtherServices
-    }));
-    
-    setBookingStep('other_services');
+  };
+
+  const handlePrevStep = () => {
+      if (bookingStep === 'dining') {
+          setBookingStep('options');
+      } else if (bookingStep === 'schedule') {
+          if (totalRooms > 0) {
+              setBookingStep('dining');
+          } else {
+              setBookingStep('options');
+          }
+      }
   };
 
   const handleSaveBooking = async () => {
@@ -191,7 +203,7 @@ const App: React.FC = () => {
         setBookingStep('confirmed');
       }
     } else {
-       setBookingStep(editingGroup ? 'details' : 'rooms');
+       setBookingStep(editingGroup ? 'options' : 'options');
     }
   };
 
@@ -229,7 +241,7 @@ const App: React.FC = () => {
     }
 
     setView('booking');
-    setBookingStep('rooms');
+    setBookingStep('options');
   };
 
   const handleStartOver = () => {
@@ -237,20 +249,18 @@ const App: React.FC = () => {
     setBookingDetails(initialDetails);
     setConfirmation(null);
     setEditingGroup(null);
-    setBookingStep('rooms');
+    setBookingStep('options');
     setView('booking');
   };
   
   const getStepDescription = () => {
     switch (bookingStep) {
-        case 'rooms':
-            return 'Paso 1: Selecciona habitaciones, salas y servicios';
-        case 'details':
-            return 'Paso 2: Fechas y datos del responsable';
+        case 'options':
+            return 'Paso 1: Elige fechas, responsable, alojamiento y salas';
         case 'dining':
-            return 'Paso 3: Servicios de comedor';
-        case 'other_services':
-            return 'Paso 4: Detallar uso de salas y servicios';
+            return 'Paso 2: Configura los servicios de comedor';
+        case 'schedule':
+            return 'Paso 3: Define los horarios de las salas y servicios';
         default:
             return '';
     }
@@ -413,14 +423,17 @@ const App: React.FC = () => {
                 reservations={reservations}
                 rooms={ALL_INDIVIDUAL_ITEMS}
                 roomTypes={ROOM_TYPES}
-                onNewBooking={() => setView('booking')}
+                onNewBooking={() => {
+                  handleStartOver();
+                  setView('booking');
+                }}
             />
         )}
         {view === 'booking' && (
           <>
             <header className="text-center mb-12">
               <h1 className="text-5xl font-extrabold text-slate-800">
-                {isEditing ? 'Editar Reserva' : 'Reserva de Habitaciones'}
+                {isEditing ? 'Editar Reserva' : 'Crear Reserva'}
               </h1>
               <p className="text-xl text-slate-500 mt-2">
                 {isEditing && `Modificando la reserva de ${editingGroup.guestName}. `}
@@ -429,21 +442,26 @@ const App: React.FC = () => {
             </header>
 
             <main className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-              <div className="lg:col-span-2">
-                {bookingStep === 'rooms' && (
+              <div className="lg:col-span-2 space-y-12">
+                {bookingStep === 'options' && (
                    <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in-up">
-                        {ROOM_TYPES.map(room => (
-                        <RoomTypeCard
-                            key={room.id}
-                            room={room}
-                            selectedCount={roomSelection[room.id] || 0}
-                            onCountChange={handleCountChange}
-                        />
-                        ))}
+                    <BookingDetailsForm details={bookingDetails} setDetails={setBookingDetails} />
+
+                    <div>
+                        <h2 className="text-3xl font-bold text-slate-700 mb-6 text-center border-t pt-8">Alojamiento</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in-up">
+                            {ROOM_TYPES.map(room => (
+                            <RoomTypeCard
+                                key={room.id}
+                                room={room}
+                                selectedCount={roomSelection[room.id] || 0}
+                                onCountChange={handleCountChange}
+                            />
+                            ))}
+                        </div>
                     </div>
 
-                    <div className="mt-12">
+                    <div>
                         <h2 className="text-3xl font-bold text-slate-700 mb-6 text-center border-t pt-8">Salas y Servicios Adicionales</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in-up">
                             {SERVICE_TYPES.map(service => (
@@ -458,13 +476,10 @@ const App: React.FC = () => {
                     </div>
                    </>
                 )}
-                {bookingStep === 'details' && (
-                  <BookingDetailsForm details={bookingDetails} setDetails={setBookingDetails} />
-                )}
                 {bookingStep === 'dining' && (
                   <BookingDiningForm details={bookingDetails} setDetails={setBookingDetails} totalGuests={totalGuests} />
                 )}
-                {bookingStep === 'other_services' && (
+                {bookingStep === 'schedule' && (
                     <BookingOtherServicesForm details={bookingDetails} setDetails={setBookingDetails} roomSelection={roomSelection} />
                 )}
                  {(bookingStep === 'loading') && (
@@ -482,52 +497,38 @@ const App: React.FC = () => {
                   totalRooms={totalRooms}
                   totalGuests={totalGuests}
                 />
-                {bookingStep === 'rooms' && (
+                
+                {bookingStep === 'options' && (
                   <button
-                    onClick={() => setBookingStep('details')}
-                    disabled={totalItems === 0}
+                    onClick={handleNextStep}
+                    disabled={totalItems === 0 || !bookingDetails.name || !bookingDetails.dni || !bookingDetails.phone}
                     className="w-full mt-8 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                   >
                     Continuar
                   </button>
                 )}
-                 {bookingStep === 'details' && (
-                  <div className="mt-8 flex space-x-4">
-                    <button
-                      onClick={() => setBookingStep('rooms')}
-                      className="w-1/2 bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-lg text-lg hover:bg-slate-300 transition-all duration-300 shadow-md"
-                    >
-                      Atrás
-                    </button>
-                    <button
-                      onClick={handleProceedToDining}
-                      disabled={!bookingDetails.name || !bookingDetails.dni || !bookingDetails.phone}
-                      className="w-1/2 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md"
-                    >
-                     Continuar
-                    </button>
-                  </div>
-                 )}
+
                  {bookingStep === 'dining' && (
                   <div className="mt-8 flex space-x-4">
                     <button
-                      onClick={() => setBookingStep('details')}
+                      onClick={handlePrevStep}
                       className="w-1/2 bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-lg text-lg hover:bg-slate-300 transition-all duration-300 shadow-md"
                     >
                       Atrás
                     </button>
                     <button
-                      onClick={handleProceedToOtherServices}
+                      onClick={totalServices > 0 ? handleNextStep : handleSaveBooking}
                       className="w-1/2 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md"
                     >
-                      Continuar
+                     {totalServices > 0 ? 'Continuar' : (isEditing ? 'Guardar Cambios' : 'Confirmar')}
                     </button>
                   </div>
                  )}
-                 {bookingStep === 'other_services' && (
+
+                 {bookingStep === 'schedule' && (
                   <div className="mt-8 flex space-x-4">
                     <button
-                      onClick={() => setBookingStep('dining')}
+                      onClick={handlePrevStep}
                       className="w-1/2 bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-lg text-lg hover:bg-slate-300 transition-all duration-300 shadow-md"
                     >
                       Atrás
@@ -540,6 +541,7 @@ const App: React.FC = () => {
                     </button>
                   </div>
                  )}
+
                  {isEditing && bookingStep !== 'loading' && (
                     <button
                         onClick={() => {

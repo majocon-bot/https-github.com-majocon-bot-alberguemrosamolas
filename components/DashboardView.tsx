@@ -31,11 +31,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({ reservations, rooms, room
 
     reservations.forEach(res => {
       const room = roomTypes.find(rt => rt.id === res.roomType);
-      if (!room) return;
-
+      
       // Active today
       if (res.checkIn <= todayStr && res.checkOut > todayStr) {
-        guests += room.capacity;
+        if (room) { // Only count guests for rooms, not services
+            guests += room.capacity;
+        }
         occupiedRoomIds.add(res.roomId);
       }
       
@@ -59,9 +60,11 @@ const DashboardView: React.FC<DashboardViewProps> = ({ reservations, rooms, room
   }, [reservations, todayStr, roomTypes]);
 
   const occupancyRate = useMemo(() => {
-    if (rooms.length === 0) return 0;
-    return Math.round((occupiedRooms / rooms.length) * 100);
-  }, [occupiedRooms, rooms]);
+    const totalPhysicalRooms = rooms.filter(r => roomTypes.some(rt => rt.id === r.type)).length;
+    if (totalPhysicalRooms === 0) return 0;
+    const occupiedPhysicalRooms = Array.from(occupiedRooms).filter(id => rooms.find(r => r.id === id && roomTypes.some(rt => rt.id === r.type))).length;
+    return Math.round((occupiedPhysicalRooms / totalPhysicalRooms) * 100);
+  }, [occupiedRooms, rooms, roomTypes]);
 
   const dailyDiningTotals = useMemo(() => {
     const totals: DiningSelection = {
@@ -91,7 +94,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ reservations, rooms, room
           guestName: res.guestName,
           minCheckIn: res.checkIn,
           maxCheckOut: res.checkOut,
-          roomSummary: {}, diningSummary: {}, totalGuests: 0, reservations: [],
+          roomSummary: {}, diningSummary: {}, otherServicesSummary: {}, totalGuests: 0, reservations: [],
         };
       }
       
@@ -149,7 +152,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ reservations, rooms, room
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard title="Huéspedes Hoy" value={guestsToday} subtext="Capacidad total de habitaciones ocupadas" icon={<UserIcon className="w-6 h-6"/>} />
-            <StatCard title="Tasa de Ocupación" value={`${occupancyRate}%`} subtext={`${occupiedRooms} de ${rooms.length} habitaciones`} icon={<BedIcon className="w-6 h-6"/>} />
+            <StatCard title="Tasa de Ocupación" value={`${occupancyRate}%`} subtext={`${occupiedRooms} de ${rooms.length} items`} icon={<BedIcon className="w-6 h-6"/>} />
             <StatCard title="Check-ins Hoy" value={checkInsToday} subtext="Grupos que llegan hoy" icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>} />
             <StatCard title="Check-outs Hoy" value={checkOutsToday} subtext="Grupos que se van hoy" icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M14 17l5-5-5-5M19 12H9"/></svg>} />
         </div>
@@ -168,10 +171,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({ reservations, rooms, room
                                         {new Date(group.minCheckIn).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', timeZone: 'UTC' })} &rarr; {new Date(group.maxCheckOut).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })}
                                     </p>
                                 </div>
+                                { group.totalGuests > 0 &&
                                 <div className="flex items-center space-x-2 text-slate-600 font-bold bg-slate-100 px-3 py-1 rounded-full">
                                     <UserIcon className="w-5 h-5"/>
                                     <span>{group.totalGuests}</span>
                                 </div>
+                                }
                             </li>
                         ))}
                     </ul>

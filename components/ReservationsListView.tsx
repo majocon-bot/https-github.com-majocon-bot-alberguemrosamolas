@@ -12,6 +12,11 @@ interface ReservationsListViewProps {
   onEditGroup: (group: GroupedReservation) => void;
 }
 
+interface GroupedReservationWithCost extends GroupedReservation {
+  totalCost: number;
+}
+
+
 const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservations, onDeleteGroup, onEditGroup }) => {
 
   const handlePrint = (guestName: string) => {
@@ -20,7 +25,7 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
     window.print();
   };
 
-  const groupedReservations = useMemo((): GroupedReservation[] => {
+  const groupedReservations = useMemo((): GroupedReservationWithCost[] => {
     const groups: { [key: string]: GroupedReservation } = reservations.reduce((acc, res) => {
       if (!acc[res.guestName]) {
         acc[res.guestName] = {
@@ -79,7 +84,52 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
             const roomType = ROOM_TYPES.find(rt => rt.id === res.roomType);
             return sum + (roomType?.capacity || 0);
         }, 0);
-        return { ...group, totalGuests };
+
+        // Calculate total cost
+        const accommodationCost = group.reservations.reduce((sum, res) => {
+            const roomType = ROOM_TYPES.find(rt => rt.id === res.roomType);
+            if (roomType && roomType.price) {
+                const resNights = Math.max(1, (new Date(res.checkOut).getTime() - new Date(res.checkIn).getTime()) / (1000 * 3600 * 24));
+                return sum + (roomType.price * resNights);
+            }
+            return sum;
+        }, 0);
+
+        const diningCost = Object.values(group.diningSummary).reduce((dateSum, dailyServices) => {
+            return dateSum + Object.entries(dailyServices).reduce((serviceSum, [serviceKey, count]) => {
+                const option = DINING_OPTIONS.find(opt => opt.id === serviceKey);
+                if (option && count > 0) {
+                    return serviceSum + (option.price * count);
+                }
+                return serviceSum;
+            }, 0);
+        }, 0);
+
+        const otherServicesCost = Object.values(group.otherServicesSummary).reduce((dateSum, dailyServices) => {
+            return dateSum + Object.entries(dailyServices).reduce((serviceSum, [serviceId, slots]) => {
+                const serviceInfo = SERVICE_TYPES.find(s => s.id === serviceId);
+                if (!serviceInfo || !serviceInfo.price) return serviceSum;
+
+                if (serviceInfo.priceUnit === 'per_hour') {
+                    const totalHours = slots.reduce((hourSum, slot) => {
+                         if (!slot.startTime || !slot.endTime) return hourSum;
+                         const startTime = new Date(`1970-01-01T${slot.startTime}:00`);
+                         const endTime = new Date(`1970-01-01T${slot.endTime}:00`);
+                         if (isNaN(startTime.getTime()) || isNaN(endTime.getTime()) || endTime <= startTime) return hourSum;
+                         return hourSum + (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+                    }, 0);
+                    return serviceSum + (serviceInfo.price * totalHours);
+                } else { // per_day or one_time
+                    // Assuming price is per day per slot/unit booked on that day
+                    return serviceSum + (serviceInfo.price * slots.length);
+                }
+            }, 0);
+        }, 0);
+        
+        const totalCost = accommodationCost + diningCost + otherServicesCost;
+
+
+        return { ...group, totalGuests, totalCost };
       })
       .sort((a, b) => a.minCheckIn.localeCompare(b.minCheckIn));
   }, [reservations]);
@@ -100,12 +150,20 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
             return (
               <div key={group.guestName} id={`reservation-${group.guestName}`} className="bg-white p-6 rounded-xl shadow-lg flex flex-col transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
                 <div className="flex justify-between items-start mb-2">
-                  <h2 className="text-2xl font-bold text-indigo-700">{group.guestName}</h2>
-                  <div className="flex items-center space-x-1 no-print">
-                      <button onClick={() => onEditGroup(group)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors" title="Editar Reserva"><EditIcon className="w-5 h-5"/></button>
-                      <button onClick={() => onDeleteGroup(group.guestName)} className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors" title="Borrar Grupo"><TrashIcon className="w-5 h-5"/></button>
-                      <button onClick={() => handlePrint(group.guestName)} className="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors" title="Imprimir"><PrintIcon className="w-5 h-5"/></button>
-                  </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-indigo-700">{group.guestName}</h2>
+                        <div className="flex items-center space-x-1 no-print">
+                            <button onClick={() => onEditGroup(group)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors" title="Editar Reserva"><EditIcon className="w-5 h-5"/></button>
+                            <button onClick={() => onDeleteGroup(group.guestName)} className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors" title="Borrar Grupo"><TrashIcon className="w-5 h-5"/></button>
+                            <button onClick={() => handlePrint(group.guestName)} className="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors" title="Imprimir"><PrintIcon className="w-5 h-5"/></button>
+                        </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 pl-2">
+                        <div className="text-2xl font-bold text-slate-800">
+                            {group.totalCost.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                        </div>
+                        <div className="text-xs text-slate-500">Coste Total Estimado</div>
+                    </div>
                 </div>
                 <div className="text-sm text-slate-500 mb-4 border-b pb-3 space-y-1">
                   <p><strong>Fechas:</strong> {new Date(group.minCheckIn).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', timeZone: 'UTC' })} &rarr; {new Date(group.maxCheckOut).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })}</p>
