@@ -68,22 +68,28 @@ const App: React.FC = () => {
   };
   
   const { totalRooms, totalGuests, totalItems, totalServices } = useMemo(() => {
-    const selectionEntries = Object.entries(roomSelection);
+    let roomsCount = 0;
+    let guestsCount = 0;
+    let servicesCount = 0;
 
-    const roomsCount = selectionEntries
-      .filter(([itemId]) => ROOM_TYPES.some(rt => rt.id === itemId))
-      .reduce((sum, [, count]) => sum + (Number(count) || 0), 0);
-      
-    const guestsCount = selectionEntries
-      .filter(([itemId]) => ROOM_TYPES.some(rt => rt.id === itemId))
-      .reduce((sum, [itemId, count]) => {
-        const roomType = ROOM_TYPES.find(rt => rt.id === itemId)!;
-        return sum + roomType.capacity * (Number(count) || 0);
-      }, 0);
+    for (const [itemId, count] of Object.entries(roomSelection)) {
+      const numCount = Number(count) || 0;
+      if (numCount === 0) continue;
 
-    const servicesCount = selectionEntries
-      .filter(([itemId]) => SERVICE_TYPES.some(st => st.id === itemId))
-      .reduce((sum, [, count]) => sum + (Number(count) || 0), 0);
+      // Check if it's a room
+      const roomType = ROOM_TYPES.find(rt => rt.id === itemId);
+      if (roomType) {
+        roomsCount += numCount;
+        guestsCount += roomType.capacity * numCount;
+        continue; // It's a room, so skip to the next item
+      }
+
+      // Check if it's a service
+      const serviceType = SERVICE_TYPES.find(st => st.id === itemId);
+      if (serviceType) {
+        servicesCount += numCount;
+      }
+    }
 
     return {
       totalRooms: roomsCount,
