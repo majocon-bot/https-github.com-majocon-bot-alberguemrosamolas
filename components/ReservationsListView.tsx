@@ -79,11 +79,16 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
 
     return Object.values(groups)
       .map(group => {
-        // Calculate guests based only on ROOM_TYPES, not services.
-        const totalGuests = group.reservations.reduce((sum, res) => {
-            const roomType = ROOM_TYPES.find(rt => rt.id === res.roomType);
-            return sum + (roomType?.capacity || 0);
+        // Calculate guests based on room summary, using multiplication.
+        const totalGuests = Object.entries(group.roomSummary).reduce((sum, [roomTypeId, count]) => {
+            const roomType = ROOM_TYPES.find(rt => rt.id === roomTypeId);
+            // Ensure we only count guests for actual rooms, not services
+            if (roomType) { 
+                return sum + (roomType.capacity * count);
+            }
+            return sum;
         }, 0);
+
 
         // Calculate total cost
         const accommodationCost = group.reservations.reduce((sum, res) => {

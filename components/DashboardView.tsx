@@ -108,9 +108,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({ reservations, rooms, room
     return Object.values(groups)
       .filter(group => group.minCheckIn >= todayStr)
       .map(group => {
-        const totalGuests = group.reservations.reduce((sum, res) => {
-            const roomType = roomTypes.find(rt => rt.id === res.roomType);
-            return sum + (roomType?.capacity || 0);
+        const totalGuests = Object.entries(group.roomSummary).reduce((sum, [roomTypeId, count]) => {
+            const roomType = roomTypes.find(rt => rt.id === roomTypeId);
+            if (roomType) {
+                return sum + (roomType.capacity * count);
+            }
+            return sum;
         }, 0);
         return { ...group, totalGuests };
       })
