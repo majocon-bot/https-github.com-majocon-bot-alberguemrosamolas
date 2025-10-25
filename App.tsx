@@ -68,25 +68,38 @@ const App: React.FC = () => {
   };
   
   const { totalRooms, totalGuests, totalItems, totalServices } = useMemo(() => {
-    let rooms = 0;
-    let guests = 0;
-    let items = 0;
-    let services = 0;
+    const totals = {
+        rooms: 0,
+        guests: 0,
+        items: 0,
+        services: 0,
+    };
 
-    Object.entries(roomSelection).forEach(([itemId, count]) => {
-      items += Number(count);
-      const room = ROOM_TYPES.find(r => r.id === itemId);
-      if (room) {
-        rooms += Number(count);
-        guests += room.capacity * Number(count);
-      }
-      const service = SERVICE_TYPES.find(s => s.id === itemId);
-      if (service) {
-        services += Number(count);
-      }
-    });
+    for (const itemId in roomSelection) {
+        if (Object.prototype.hasOwnProperty.call(roomSelection, itemId)) {
+            const count = roomSelection[itemId] ?? 0;
+            if (count > 0) {
+                totals.items += count;
+                const roomType = ROOM_TYPES.find(r => r.id === itemId);
+                if (roomType) {
+                    totals.rooms += count;
+                    totals.guests += (roomType.capacity || 0) * count;
+                } else {
+                    const serviceType = SERVICE_TYPES.find(s => s.id === itemId);
+                    if (serviceType) {
+                        totals.services += count;
+                    }
+                }
+            }
+        }
+    }
     
-    return { totalRooms: rooms, totalGuests: guests, totalItems: items, totalServices: services };
+    return { 
+        totalRooms: totals.rooms, 
+        totalGuests: totals.guests, 
+        totalItems: totals.items, 
+        totalServices: totals.services 
+    };
   }, [roomSelection]);
   
   const handleNextStep = () => {
@@ -518,6 +531,7 @@ const App: React.FC = () => {
                     </button>
                     <button
                       onClick={totalServices > 0 ? handleNextStep : handleSaveBooking}
+                      disabled={!bookingDetails.name || !bookingDetails.dni || !bookingDetails.phone}
                       className="w-1/2 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md"
                     >
                      {totalServices > 0 ? 'Continuar' : (isEditing ? 'Guardar Cambios' : 'Confirmar')}
@@ -535,6 +549,7 @@ const App: React.FC = () => {
                     </button>
                     <button
                       onClick={handleSaveBooking}
+                      disabled={!bookingDetails.name || !bookingDetails.dni || !bookingDetails.phone}
                       className="w-1/2 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md"
                     >
                       {isEditing ? 'Guardar Cambios' : 'Confirmar Reserva'}
