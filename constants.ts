@@ -111,7 +111,7 @@ export const SERVICE_TYPES: RoomType[] = [
     capacity: 1, // Represents one person using the service, not a capacity
     available: 10, // e.g., 10 hours available per day
     image: 'https://picsum.photos/seed/secretarial/600/400',
-    price: 10, // Adjusted price for easier calculation
+    price: 0.077,
     priceUnit: 'per_hour',
   },
 ];
@@ -137,10 +137,10 @@ export const ALL_INDIVIDUAL_ITEMS: IndividualRoom[] = [...INDIVIDUAL_ROOMS, ...I
 
 export const DINING_OPTIONS = [
     { id: 'breakfast', label: 'Desayuno', price: 8 },
-    { id: 'lunch', label: 'Comida', price: 15 },
-    { id: 'dinner', label: 'Cena', price: 12 },
-    { id: 'morningSnack', label: 'Tomar Mañana', price: 4 },
-    { id: 'afternoonSnack', label: 'Tomar Merienda', price: 4 }
+    { id: 'lunch', label: 'Comida', price: 16.5 },
+    { id: 'dinner', label: 'Cena', price: 11 },
+    { id: 'morningSnack', label: 'Tomar Mañana', price: 5.5 },
+    { id: 'afternoonSnack', label: 'Tomar Merienda', price: 5.5 }
 ] as const; // Use const assertion for type safety
 
 const today = new Date();
