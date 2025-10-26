@@ -1,18 +1,19 @@
-
 import React from 'react';
 import { RoomType } from '../types';
 import { BedIcon } from './icons/BedIcon';
 import { UserIcon } from './icons/UserIcon';
 import { PlusIcon } from './icons/PlusIcon';
 import { MinusIcon } from './icons/MinusIcon';
+import { BriefcaseIcon } from './icons/BriefcaseIcon';
 
 interface RoomTypeCardProps {
   room: RoomType;
   selectedCount: number;
   onCountChange: (roomId: string, newCount: number) => void;
+  isService?: boolean;
 }
 
-const RoomTypeCard: React.FC<RoomTypeCardProps> = ({ room, selectedCount, onCountChange }) => {
+const RoomTypeCard: React.FC<RoomTypeCardProps> = ({ room, selectedCount, onCountChange, isService }) => {
   const handleIncrement = () => {
     if (selectedCount < room.available) {
       onCountChange(room.id, selectedCount + 1);
@@ -25,8 +26,13 @@ const RoomTypeCard: React.FC<RoomTypeCardProps> = ({ room, selectedCount, onCoun
     }
   };
 
+  const cardBgClass = isService ? 'bg-indigo-50' : 'bg-white';
+  const capacityLabel = isService ? 'Capacidad' : 'Huéspedes';
+  const availableLabel = isService ? 'Unidades' : 'Disponibles';
+  const AvailableIcon = isService ? BriefcaseIcon : BedIcon;
+
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
+    <div className={`${cardBgClass} rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]`}>
       <img className="w-full h-48 object-cover" src={room.image} alt={room.name} />
       <div className="p-6">
         <h3 className="text-2xl font-bold text-slate-800 mb-2">{room.name}</h3>
@@ -34,11 +40,11 @@ const RoomTypeCard: React.FC<RoomTypeCardProps> = ({ room, selectedCount, onCoun
         <div className="flex justify-between items-center text-slate-500 mb-6">
           <div className="flex items-center space-x-2">
             <UserIcon className="w-5 h-5" />
-            <span>{room.capacity} Huéspedes</span>
+            <span>{room.capacity} {capacityLabel}</span>
           </div>
           <div className="flex items-center space-x-2">
-            <BedIcon className="w-5 h-5" />
-            <span>{room.available} Disponibles</span>
+            <AvailableIcon className="w-5 h-5" />
+            <span>{room.available} {availableLabel}</span>
           </div>
         </div>
         <div className="flex items-center justify-center space-x-4">

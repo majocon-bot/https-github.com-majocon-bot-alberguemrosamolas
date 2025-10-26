@@ -488,6 +488,7 @@ const App: React.FC = () => {
                                     room={service}
                                     selectedCount={roomSelection[service.id] || 0}
                                     onCountChange={handleCountChange}
+                                    isService={true}
                                 />
                             ))}
                         </div>
