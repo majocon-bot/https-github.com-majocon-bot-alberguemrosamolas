@@ -67,7 +67,10 @@ const BookingOtherServicesForm: React.FC<BookingOtherServicesFormProps> = ({ det
     };
 
     const handleUnitChange = (date: string, serviceId: string, value: string) => {
-        const units = parseInt(value, 10) || 0;
+        let units = parseInt(value, 10) || 0;
+        if (units > 999) {
+            units = 999;
+        }
         setDetails(prev => {
             const newUnitServices = { ...(prev.unitServices || {}) };
             if (!newUnitServices[date]) newUnitServices[date] = {};
@@ -109,6 +112,7 @@ const BookingOtherServicesForm: React.FC<BookingOtherServicesFormProps> = ({ det
                                                         value={details.unitServices?.[date]?.[service.id] || ''}
                                                         onChange={e => handleUnitChange(date, service.id, e.target.value)}
                                                         min="0"
+                                                        max="999"
                                                         placeholder="0"
                                                         className="w-40 px-2 py-1 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                                     />

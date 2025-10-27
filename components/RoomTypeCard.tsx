@@ -35,7 +35,7 @@ const RoomTypeCard: React.FC<RoomTypeCardProps> = ({ room, selectedCount, onCoun
     switch (unit) {
       case 'per_day': return 'día';
       case 'per_hour': return 'hora';
-      case 'one_time': return 'pago único';
+      case 'one_time': return 'por unidad';
       default: return '';
     }
   };
