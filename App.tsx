@@ -271,6 +271,15 @@ const App: React.FC = () => {
     setView('booking');
   };
   
+  const handleGoToDashboard = () => {
+    setRoomSelection({});
+    setBookingDetails(initialDetails);
+    setConfirmation(null);
+    setEditingGroup(null);
+    setBookingStep('options');
+    setView('dashboard');
+  };
+
   const getStepDescription = () => {
     switch (bookingStep) {
         case 'options':
@@ -415,12 +424,20 @@ const App: React.FC = () => {
              </div>
           </div>
           
-          <button 
-            onClick={handleStartOver}
-            className="mt-10 w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg"
-          >
-            Hacer Otra Reserva
-          </button>
+          <div className="mt-10 space-y-4">
+            <button 
+              onClick={handleStartOver}
+              className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg"
+            >
+              Hacer Otra Reserva
+            </button>
+            <button 
+              onClick={handleGoToDashboard}
+              className="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-red-700 transition-all duration-300 shadow-md hover:shadow-lg"
+            >
+              Ir al Dashboard
+            </button>
+          </div>
         </div>
       </div>
     );
