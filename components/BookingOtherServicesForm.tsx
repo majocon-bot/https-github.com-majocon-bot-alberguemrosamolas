@@ -66,6 +66,16 @@ const BookingOtherServicesForm: React.FC<BookingOtherServicesFormProps> = ({ det
         updateOtherServices(date, serviceId, newSlots);
     };
 
+    const handleUnitChange = (date: string, serviceId: string, value: string) => {
+        const units = parseInt(value, 10) || 0;
+        setDetails(prev => {
+            const newUnitServices = { ...(prev.unitServices || {}) };
+            if (!newUnitServices[date]) newUnitServices[date] = {};
+            newUnitServices[date][serviceId] = units;
+            return { ...prev, unitServices: newUnitServices };
+        });
+    };
+
     if (selectedServices.length === 0) {
         return (
              <div className="bg-white p-8 rounded-xl shadow-lg text-center animate-fade-in-up">
@@ -80,7 +90,7 @@ const BookingOtherServicesForm: React.FC<BookingOtherServicesFormProps> = ({ det
              <fieldset>
                 <legend className="text-2xl font-bold text-slate-800 mb-4">Uso de Salas y Servicios</legend>
                  <p className="text-sm text-slate-500 mb-4">
-                    Especifica los horarios de uso para cada servicio. Puedes añadir tantos tramos como unidades hayas reservado.
+                    Especifica los horarios o unidades para cada servicio.
                 </p>
                 <div className="space-y-6">
                     {stayDates.map(date => (
@@ -88,6 +98,26 @@ const BookingOtherServicesForm: React.FC<BookingOtherServicesFormProps> = ({ det
                             <p className="font-semibold text-slate-700 mb-3 text-lg">{new Date(date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}</p>
                             <div className="space-y-4">
                                 {selectedServices.map(service => {
+                                    if (service.priceUnit === 'one_time') {
+                                        return (
+                                            <div key={service.id} className="bg-white p-3 rounded-md shadow-sm">
+                                                <label htmlFor={`${date}-${service.id}-units`} className="block text-md font-medium text-slate-800 mb-2">{service.name}</label>
+                                                <div className="flex items-center gap-2">
+                                                    <input 
+                                                        type="number"
+                                                        id={`${date}-${service.id}-units`}
+                                                        value={details.unitServices?.[date]?.[service.id] || ''}
+                                                        onChange={e => handleUnitChange(date, service.id, e.target.value)}
+                                                        min="0"
+                                                        placeholder="0"
+                                                        className="w-40 px-2 py-1 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                    />
+                                                    <span className="text-slate-500">unidades</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
                                     const maxSlots = roomSelection[service.id] || 0;
                                     const currentSlots = details.otherServices?.[date]?.[service.id] || [];
                                     return (

@@ -35,6 +35,7 @@ export interface BookingDetails {
   observations: string;
   dining: { [date: string]: DiningSelection };
   otherServices: { [date: string]: { [serviceId: string]: TimeSlot[] } };
+  unitServices?: { [date: string]: { [serviceId: string]: number } };
 }
 
 export interface FullBooking {
@@ -54,6 +55,7 @@ export interface Reservation {
   checkOut: string; // YYYY-MM-DD
   dining?: { [date: string]: DiningSelection };
   otherServices?: { [date: string]: { [serviceId: string]: TimeSlot[] } };
+  unitServices?: { [date: string]: { [serviceId: string]: number } };
 }
 
 export interface IndividualRoom {
@@ -69,6 +71,7 @@ export interface GroupedReservation {
   roomSummary: { [roomType: string]: number };
   diningSummary: { [date: string]: DiningSelection };
   otherServicesSummary: { [date: string]: { [serviceId: string]: TimeSlot[] } };
+  unitServicesSummary?: { [date: string]: { [serviceId: string]: number } };
   totalGuests: number;
   reservations: Reservation[]; // Keep track of original reservations
 }
@@ -87,4 +90,5 @@ export interface ServiceBooking {
   price?: number;
   priceUnit?: 'per_day' | 'per_hour' | 'one_time';
   slotIndex: number;
+  units?: number;
 }

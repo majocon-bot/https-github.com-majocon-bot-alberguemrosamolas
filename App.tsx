@@ -33,6 +33,7 @@ const initialDetails: BookingDetails = {
     observations: '',
     dining: {},
     otherServices: {},
+    unitServices: {},
 };
 
 const getDatesInRange = (startDate: string, endDate: string): string[] => {
@@ -117,28 +118,42 @@ const App: React.FC = () => {
           } else if (totalServices > 0) {
               const stayDates = getDatesInRange(bookingDetails.checkIn, bookingDetails.checkOut);
               const newOtherServices = { ...(bookingDetails.otherServices || {}) };
-              const selectedServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id) && (roomSelection[id] || 0) > 0);
+              const newUnitServices = { ...(bookingDetails.unitServices || {}) };
+              const selectedTimeServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id && s.priceUnit !== 'one_time') && (roomSelection[id] || 0) > 0);
+              const selectedUnitServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id && s.priceUnit === 'one_time') && (roomSelection[id] || 0) > 0);
+              
               for (const date of stayDates) {
                   if (!newOtherServices[date]) newOtherServices[date] = {};
-                  for(const serviceId of selectedServices) {
+                  for(const serviceId of selectedTimeServices) {
                       if (!newOtherServices[date][serviceId]) newOtherServices[date][serviceId] = [];
                   }
+                  if (!newUnitServices[date]) newUnitServices[date] = {};
+                  for(const serviceId of selectedUnitServices) {
+                      if (newUnitServices[date][serviceId] === undefined) newUnitServices[date][serviceId] = 0;
+                  }
               }
-              setBookingDetails(prev => ({ ...prev, otherServices: newOtherServices }));
+              setBookingDetails(prev => ({ ...prev, otherServices: newOtherServices, unitServices: newUnitServices }));
               setBookingStep('schedule');
           }
       } else if (bookingStep === 'dining') {
           if (totalServices > 0) {
               const stayDates = getDatesInRange(bookingDetails.checkIn, bookingDetails.checkOut);
               const newOtherServices = { ...(bookingDetails.otherServices || {}) };
-              const selectedServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id) && (roomSelection[id] || 0) > 0);
+              const newUnitServices = { ...(bookingDetails.unitServices || {}) };
+              const selectedTimeServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id && s.priceUnit !== 'one_time') && (roomSelection[id] || 0) > 0);
+              const selectedUnitServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id && s.priceUnit === 'one_time') && (roomSelection[id] || 0) > 0);
+
               for (const date of stayDates) {
                   if (!newOtherServices[date]) newOtherServices[date] = {};
-                  for(const serviceId of selectedServices) {
+                  for(const serviceId of selectedTimeServices) {
                       if (!newOtherServices[date][serviceId]) newOtherServices[date][serviceId] = [];
                   }
+                  if (!newUnitServices[date]) newUnitServices[date] = {};
+                  for(const serviceId of selectedUnitServices) {
+                      if (newUnitServices[date][serviceId] === undefined) newUnitServices[date][serviceId] = 0;
+                  }
               }
-              setBookingDetails(prev => ({ ...prev, otherServices: newOtherServices }));
+              setBookingDetails(prev => ({ ...prev, otherServices: newOtherServices, unitServices: newUnitServices }));
               setBookingStep('schedule');
           }
       }
@@ -197,6 +212,7 @@ const App: React.FC = () => {
           checkOut: bookingDetails.checkOut,
           dining: bookingDetails.dining,
           otherServices: bookingDetails.otherServices,
+          unitServices: bookingDetails.unitServices,
         });
       });
     }
@@ -250,6 +266,7 @@ const App: React.FC = () => {
         observations: firstRes.observations,
         dining: group.diningSummary,
         otherServices: group.otherServicesSummary,
+        unitServices: group.unitServicesSummary,
       });
     }
 

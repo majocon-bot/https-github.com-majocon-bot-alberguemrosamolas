@@ -35,6 +35,7 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
           // as it's duplicated across all reservations for that group booking.
           diningSummary: res.dining || {},
           otherServicesSummary: res.otherServices || {},
+          unitServicesSummary: res.unitServices || {},
           totalGuests: 0,
           reservations: [],
         };
@@ -113,8 +114,18 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
                 }
             }, 0);
         }, 0);
+
+        const unitServicesCost = Object.values(group.unitServicesSummary || {}).reduce((dateSum, dailyServices) => {
+            return dateSum + Object.entries(dailyServices).reduce((serviceSum, [serviceId, units]) => {
+                const serviceInfo = SERVICE_TYPES.find(s => s.id === serviceId);
+                if (serviceInfo && serviceInfo.price && units > 0) {
+                    return serviceSum + (serviceInfo.price * units);
+                }
+                return serviceSum;
+            }, 0);
+        }, 0);
         
-        const totalCost = accommodationCost + diningCost + otherServicesCost;
+        const totalCost = accommodationCost + diningCost + otherServicesCost + unitServicesCost;
 
 
         return { ...group, totalGuests, totalCost };
@@ -235,7 +246,36 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
                               })}
                             </div>
                         ) : (
-                            <p className="text-sm text-slate-400 italic">Sin uso detallado de servicios.</p>
+                            <p className="text-sm text-slate-400 italic">Sin uso detallado de servicios por horas.</p>
+                        )}
+                      </div>
+
+                       <div>
+                        <h3 className="font-semibold text-slate-700 mb-2">Uso de Servicios por Unidad</h3>
+                        {group.unitServicesSummary && Object.keys(group.unitServicesSummary).length > 0 ? (
+                            <div className="text-sm max-h-32 overflow-y-auto bg-slate-50 p-2 rounded-md space-y-2">
+                              {Object.entries(group.unitServicesSummary).sort(([dateA], [dateB]) => dateA.localeCompare(dateB)).map(([date, services]) => {
+                                  const dailyServices = Object.entries(services).filter(([, units]) => units > 0);
+                                  if (dailyServices.length === 0) return null;
+                                  return (
+                                    <div key={date}>
+                                        <p className="font-medium text-slate-600">{new Date(date).toLocaleDateString('es-ES', { month: 'long', day: 'numeric', timeZone: 'UTC' })}:</p>
+                                        <ul className="list-disc list-inside ml-2 text-slate-500">
+                                            {dailyServices.map(([serviceId, units]) => {
+                                                const serviceName = SERVICE_TYPES.find(opt => opt.id === serviceId)?.name || serviceId;
+                                                return (
+                                                    <li key={serviceId}>{serviceName}:
+                                                      <span className="font-mono"> {units} unidades</span>
+                                                    </li>
+                                                )
+                                            })}
+                                        </ul>
+                                    </div>
+                                  )
+                              })}
+                            </div>
+                        ) : (
+                            <p className="text-sm text-slate-400 italic">Sin uso detallado de servicios por unidad.</p>
                         )}
                       </div>
 

@@ -107,12 +107,12 @@ export const SERVICE_TYPES: RoomType[] = [
   {
     id: 'secretarial_services',
     name: 'SERVICIOS SECRETARIA',
-    description: 'Soporte administrativo y de secretaría por horas.',
-    capacity: 1, // Represents one person using the service, not a capacity
-    available: 10, // e.g., 10 hours available per day
+    description: 'Servicio de fotocopias y soporte administrativo. El precio es por unidad (ej. por fotocopia).',
+    capacity: 1, 
+    available: 1,
     image: 'https://picsum.photos/seed/secretarial/600/400',
-    price: 0.077,
-    priceUnit: 'per_hour',
+    price: 0.10,
+    priceUnit: 'one_time',
   },
 ];
 
@@ -195,14 +195,17 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     otherServices: {
         [formatDate(new Date(today.getFullYear(), today.getMonth(), 7))]: {
             'small_hall': [{ startTime: '10:00', endTime: '13:00' }],
-            'secretarial_services': [
-                { startTime: '09:00', endTime: '11:00' },
-                { startTime: '15:00', endTime: '16:00' }
-            ]
         },
         [formatDate(new Date(today.getFullYear(), today.getMonth(), 8))]: {
             'small_hall': [{ startTime: '10:00', endTime: '18:00' }],
-            'secretarial_services': [{ startTime: '09:00', endTime: '12:00' }]
+        },
+    },
+    unitServices: {
+        [formatDate(new Date(today.getFullYear(), today.getMonth(), 7))]: {
+            'secretarial_services': 50
+        },
+        [formatDate(new Date(today.getFullYear(), today.getMonth(), 8))]: {
+            'secretarial_services': 25
         },
     }
   },

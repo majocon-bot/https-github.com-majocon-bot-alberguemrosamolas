@@ -35,8 +35,9 @@ const ServicesListView: React.FC<ServicesListViewProps> = ({ reservations, onDel
             minCheckIn: res.checkIn,
             maxCheckOut: res.checkOut,
             roomSummary: {},
-            diningSummary: {},
-            otherServicesSummary: {},
+            diningSummary: res.dining || {},
+            otherServicesSummary: res.otherServices || {},
+            unitServicesSummary: res.unitServices || {},
             totalGuests: 0,
             reservations: [],
           };
@@ -49,19 +50,8 @@ const ServicesListView: React.FC<ServicesListViewProps> = ({ reservations, onDel
   
         group.roomSummary[res.roomType] = (group.roomSummary[res.roomType] || 0) + 1;
         
-        if (res.otherServices) {
-          Object.entries(res.otherServices).forEach(([date, services]) => {
-            if (!group.otherServicesSummary[date]) {
-              group.otherServicesSummary[date] = {};
-            }
-            Object.entries(services).forEach(([serviceId, timeSlots]) => {
-               if (!group.otherServicesSummary[date][serviceId]) {
-                group.otherServicesSummary[date][serviceId] = [];
-               }
-               group.otherServicesSummary[date][serviceId].push(...timeSlots as TimeSlot[]);
-            });
-          });
-        }
+        // This logic is simplified as group-level details are on the first reservation
+        // For a more robust system, a merging strategy would be needed if details could vary.
   
         group.reservations.push(res);
   
@@ -76,6 +66,7 @@ const ServicesListView: React.FC<ServicesListViewProps> = ({ reservations, onDel
     const bookings: ServiceBooking[] = [];
 
     groupedReservations.forEach(group => {
+        // Time-based services
         Object.entries(group.otherServicesSummary).forEach(([date, services]) => {
             Object.entries(services).forEach(([serviceId, timeSlots]) => {
                 const serviceInfo = SERVICE_TYPES.find(s => s.id === serviceId);
@@ -96,17 +87,38 @@ const ServicesListView: React.FC<ServicesListViewProps> = ({ reservations, onDel
                 }
             });
         });
+
+        // Unit-based services
+        Object.entries(group.unitServicesSummary || {}).forEach(([date, services]) => {
+            Object.entries(services).forEach(([serviceId, units]) => {
+                const serviceInfo = SERVICE_TYPES.find(s => s.id === serviceId);
+                if (serviceInfo && units > 0) {
+                    bookings.push({
+                        guestName: group.guestName,
+                        date,
+                        serviceId,
+                        serviceName: serviceInfo.name,
+                        startTime: '', // Not applicable
+                        endTime: '', // Not applicable
+                        price: serviceInfo.price,
+                        priceUnit: serviceInfo.priceUnit,
+                        slotIndex: -1, // Not applicable
+                        units,
+                    });
+                }
+            });
+        });
     });
 
     return bookings.sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime) || a.guestName.localeCompare(b.guestName));
   }, [groupedReservations]);
 
   const formatPriceUnit = (price: number, unit?: 'per_day' | 'per_hour' | 'one_time'): string => {
-    const formattedPrice = price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+    const formattedPrice = price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 });
       switch(unit) {
           case 'per_day': return `${formattedPrice} / día`;
           case 'per_hour': return `${formattedPrice} / hora`;
-          case 'one_time': return formattedPrice;
+          case 'one_time': return `${formattedPrice} / ud.`;
           default: return formattedPrice;
       }
   }
@@ -127,11 +139,13 @@ const ServicesListView: React.FC<ServicesListViewProps> = ({ reservations, onDel
 
   const grandTotal = useMemo(() => {
     return serviceBookings.reduce((sum, booking) => {
-        const duration = calculateDuration(booking.startTime, booking.endTime);
         let total = 0;
         if (booking.price) {
             if (booking.priceUnit === 'per_hour') {
+                const duration = calculateDuration(booking.startTime, booking.endTime);
                 total = booking.price * duration.hours;
+            } else if (booking.priceUnit === 'one_time' && booking.units) {
+                total = booking.price * booking.units;
             } else {
                 total = booking.price;
             }
@@ -176,9 +190,7 @@ const ServicesListView: React.FC<ServicesListViewProps> = ({ reservations, onDel
                   <th scope="col" className="px-6 py-3">Grupo</th>
                   <th scope="col" className="px-6 py-3">Fecha</th>
                   <th scope="col" className="px-6 py-3">Sala / Servicio</th>
-                  <th scope="col" className="px-6 py-3 text-center">Hora Inicio</th>
-                  <th scope="col" className="px-6 py-3 text-center">Hora Fin</th>
-                  <th scope="col" className="px-6 py-3 text-center">Duración</th>
+                  <th scope="col" className="px-6 py-3 text-center">Detalle</th>
                   <th scope="col" className="px-6 py-3 text-right">Precio</th>
                   <th scope="col" className="px-6 py-3 text-right">Total</th>
                   <th scope="col" className="px-6 py-3 text-center no-print">Acciones</th>
@@ -186,13 +198,18 @@ const ServicesListView: React.FC<ServicesListViewProps> = ({ reservations, onDel
               </thead>
               <tbody>
                 {serviceBookings.map((booking, index) => {
-                    const duration = calculateDuration(booking.startTime, booking.endTime);
+                    const isUnitBased = booking.priceUnit === 'one_time';
+                    const duration = isUnitBased ? { hours: 0, formatted: '-' } : calculateDuration(booking.startTime, booking.endTime);
                     let total = 0;
                     if(booking.price) {
-                        if (booking.priceUnit === 'per_hour') {
-                            total = booking.price * duration.hours;
-                        } else { // per_day or one_time
-                            total = booking.price; // Each slot costs the full price
+                        if (isUnitBased && booking.units) {
+                            total = booking.price * booking.units;
+                        } else if (!isUnitBased) {
+                           if (booking.priceUnit === 'per_hour') {
+                                total = booking.price * duration.hours;
+                            } else { // per_day
+                                total = booking.price;
+                            }
                         }
                     }
 
@@ -205,9 +222,9 @@ const ServicesListView: React.FC<ServicesListViewProps> = ({ reservations, onDel
                             {new Date(booking.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC' })}
                             </td>
                             <td className="px-6 py-4">{booking.serviceName}</td>
-                            <td className="px-6 py-4 text-center font-mono">{booking.startTime || '-'}</td>
-                            <td className="px-6 py-4 text-center font-mono">{booking.endTime || '-'}</td>
-                            <td className="px-6 py-4 text-center">{duration.formatted}</td>
+                            <td className="px-6 py-4 text-center font-mono">
+                                {isUnitBased ? `${booking.units} unidades` : `${booking.startTime || '-'} a ${booking.endTime || '-'} (${duration.formatted})`}
+                            </td>
                             <td className="px-6 py-4 text-right">
                                 {booking.price ? formatPriceUnit(booking.price, booking.priceUnit) : '-'}
                             </td>
@@ -216,8 +233,8 @@ const ServicesListView: React.FC<ServicesListViewProps> = ({ reservations, onDel
                             </td>
                              <td className="px-6 py-4 text-center no-print">
                                 <div className="flex justify-center items-center space-x-1">
-                                    <button onClick={() => onEditService(booking)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors" title="Editar Reserva"><EditIcon className="w-4 h-4" /></button>
-                                    <button onClick={() => onDeleteService(booking)} className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors" title="Borrar Tramo"><TrashIcon className="w-4 h-4" /></button>
+                                    <button onClick={() => onEditService(booking)} disabled={isUnitBased} className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors disabled:text-slate-300 disabled:hover:bg-transparent" title="Editar Reserva"><EditIcon className="w-4 h-4" /></button>
+                                    <button onClick={() => onDeleteService(booking)} disabled={isUnitBased} className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors disabled:text-slate-300 disabled:hover:bg-transparent" title="Borrar Tramo"><TrashIcon className="w-4 h-4" /></button>
                                 </div>
                             </td>
                         </tr>
@@ -226,11 +243,11 @@ const ServicesListView: React.FC<ServicesListViewProps> = ({ reservations, onDel
               </tbody>
               <tfoot>
                 <tr className="font-semibold text-slate-900 bg-slate-100 border-t-2 border-slate-300">
-                    <th scope="row" colSpan={8} className="px-6 py-3 text-right text-base">Total General</th>
-                    <td className="px-6 py-3 text-right text-base no-print"></td>
-                    <td className="px-6 py-3 text-right text-base print-only">
+                    <th scope="row" colSpan={5} className="px-6 py-3 text-right text-base">Total General</th>
+                    <td className="px-6 py-3 text-right text-base">
                         {grandTotal.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                     </td>
+                    <td className="px-6 py-3 text-right text-base no-print"></td>
                 </tr>
               </tfoot>
             </table>

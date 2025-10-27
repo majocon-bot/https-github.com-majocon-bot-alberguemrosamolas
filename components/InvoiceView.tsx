@@ -24,7 +24,6 @@ const InvoiceView: React.FC<InvoiceViewProps> = ({ group, onBack }) => {
           description: `${roomType.name} (${nights} ${nights > 1 ? 'noches' : 'noche'})`,
           quantity: Number(count),
           unitPrice: roomType.price * nights,
-          // FIX: Explicitly convert count to a number to prevent type errors in arithmetic operations.
           total: roomType.price * nights * Number(count),
         };
       })
@@ -79,11 +78,28 @@ const InvoiceView: React.FC<InvoiceViewProps> = ({ group, onBack }) => {
         )
         .filter(item => item.total > 0);
 
-    const subtotal = [...accommodationItems, ...diningItems, ...serviceItems].reduce((sum, item) => sum + (item?.total || 0), 0);
+    const unitServiceItems = Object.entries(group.unitServicesSummary || {})
+      .flatMap(([date, services]) =>
+        Object.entries(services).map(([serviceId, units]) => {
+            const serviceInfo = SERVICE_TYPES.find(s => s.id === serviceId);
+            if (!serviceInfo || !serviceInfo.price || Number(units) <= 0) return null;
+
+            return {
+                description: `${serviceInfo.name} (${new Date(date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric', timeZone: 'UTC' })})`,
+                quantity: Number(units),
+                unitPrice: serviceInfo.price,
+                total: serviceInfo.price * Number(units),
+            };
+        })
+      )
+      .filter(Boolean);
+
+
+    const subtotal = [...accommodationItems, ...diningItems, ...serviceItems, ...unitServiceItems].reduce((sum, item) => sum + (item?.total || 0), 0);
     const iva = subtotal * 0.21;
     const total = subtotal + iva;
 
-    return { accommodationItems, diningItems, serviceItems, subtotal, iva, total };
+    return { accommodationItems, diningItems, serviceItems, unitServiceItems, subtotal, iva, total };
   }, [group]);
 
 
@@ -139,7 +155,7 @@ const InvoiceView: React.FC<InvoiceViewProps> = ({ group, onBack }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {[...costDetails.accommodationItems, ...costDetails.diningItems, ...costDetails.serviceItems].map((item, index) => item && (
+                        {[...costDetails.accommodationItems, ...costDetails.diningItems, ...costDetails.serviceItems, ...costDetails.unitServiceItems].map((item, index) => item && (
                             <tr key={index} className="border-b">
                                 <td className="p-3 text-slate-700">{item.description}</td>
                                 <td className="p-3 text-slate-700 text-right">{item.quantity}</td>
