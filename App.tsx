@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { RoomSelection, BookingDetails, Reservation, GroupedReservation, GroupedReservationWithCost, TimeSlot, ServiceBooking } from './types';
+import React, { useState, useMemo, useEffect } from 'react';
+import { RoomSelection, BookingDetails, Reservation, GroupedReservation, GroupedReservationWithCost, TimeSlot, ServiceBooking, FiscalDetails } from './types';
 import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, MOCK_RESERVATIONS, DINING_OPTIONS } from './constants';
 import RoomTypeCard from './components/RoomTypeCard';
 import BookingSummary from './components/BookingSummary';
@@ -14,8 +14,9 @@ import ReservationsListView from './components/ReservationsListView';
 import DashboardView from './components/DashboardView';
 import ServicesListView from './components/ServicesListView';
 import InvoiceView from './components/InvoiceView';
+import SettingsView from './components/SettingsView';
 
-type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'dining' | 'invoice';
+type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'dining' | 'invoice' | 'settings';
 type BookingStep = 'options' | 'dining' | 'schedule' | 'loading' | 'confirmed';
 
 const today = new Date();
@@ -35,6 +36,15 @@ const initialDetails: BookingDetails = {
     otherServices: {},
     unitServices: {},
 };
+
+const initialFiscalDetails: FiscalDetails = {
+    companyName: 'Albergue Mª Rosa Molas',
+    taxId: 'G12345678',
+    address: 'Calle Falsa, 123, 12001 Castellón, España',
+    phone: '964 000 000',
+    email: 'contacto@albergue.es'
+};
+
 
 const getDatesInRange = (startDate: string, endDate: string): string[] => {
     const dates = [];
@@ -60,6 +70,15 @@ const App: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS);
   const [editingGroup, setEditingGroup] = useState<GroupedReservation | null>(null);
   const [invoiceData, setInvoiceData] = useState<GroupedReservationWithCost | null>(null);
+
+  const [fiscalDetails, setFiscalDetails] = useState<FiscalDetails>(() => {
+    try {
+        const saved = localStorage.getItem('fiscalDetails');
+        return saved ? JSON.parse(saved) : initialFiscalDetails;
+    } catch (error) {
+        return initialFiscalDetails;
+    }
+  });
 
 
   const [confirmation, setConfirmation] = useState<{ groupStayName: string; confirmationMessage: string; } | null>(null);
@@ -369,6 +388,44 @@ const App: React.FC = () => {
         window.print();
     }
   };
+
+  const handleSaveFiscalDetails = (details: FiscalDetails) => {
+    setFiscalDetails(details);
+    localStorage.setItem('fiscalDetails', JSON.stringify(details));
+    alert('Datos fiscales guardados.');
+  };
+
+  const handleExportData = () => {
+      const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+        JSON.stringify(reservations, null, 2)
+      )}`;
+      const link = document.createElement("a");
+      link.href = jsonString;
+      link.download = "reservas_albergue.json";
+      link.click();
+  };
+
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const fileReader = new FileReader();
+    if (event.target.files && event.target.files[0]) {
+        fileReader.readAsText(event.target.files[0], "UTF-8");
+        fileReader.onload = e => {
+            try {
+                const importedReservations = JSON.parse(e.target?.result as string);
+                // Basic validation could be added here
+                if (Array.isArray(importedReservations)) {
+                    setReservations(importedReservations);
+                    alert('Datos importados correctamente.');
+                } else {
+                    throw new Error("Invalid format");
+                }
+            } catch (error) {
+                alert('Error al importar el archivo. Asegúrate de que es un JSON válido.');
+            }
+        };
+    }
+  };
+
 
   const getStepDescription = () => {
     switch (bookingStep) {
@@ -717,8 +774,16 @@ const App: React.FC = () => {
         {view === 'dining' && (
            <DiningHallView reservations={reservations} />
         )}
+        {view === 'settings' && (
+            <SettingsView 
+                fiscalDetails={fiscalDetails}
+                onSave={handleSaveFiscalDetails}
+                onExport={handleExportData}
+                onImport={handleImportData}
+            />
+        )}
         {view === 'invoice' && invoiceData && (
-          <InvoiceView group={invoiceData} onBack={() => setView('reservations')} />
+          <InvoiceView group={invoiceData} onBack={() => setView('reservations')} fiscalDetails={fiscalDetails} />
         )}
       </div>
     </div>

@@ -92,3 +92,11 @@ export interface ServiceBooking {
   slotIndex: number;
   units?: number;
 }
+
+export interface FiscalDetails {
+    companyName: string;
+    taxId: string;
+    address: string;
+    phone: string;
+    email: string;
+}

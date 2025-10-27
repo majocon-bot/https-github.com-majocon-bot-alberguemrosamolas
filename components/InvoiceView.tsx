@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { GroupedReservationWithCost, TimeSlot } from '../types';
+import { GroupedReservationWithCost, TimeSlot, FiscalDetails } from '../types';
 import { ROOM_TYPES, SERVICE_TYPES, DINING_OPTIONS } from '../constants';
 import { PrintIcon } from './icons/PrintIcon';
 import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
@@ -7,9 +7,10 @@ import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
 interface InvoiceViewProps {
   group: GroupedReservationWithCost;
   onBack: () => void;
+  fiscalDetails: FiscalDetails;
 }
 
-const InvoiceView: React.FC<InvoiceViewProps> = ({ group, onBack }) => {
+const InvoiceView: React.FC<InvoiceViewProps> = ({ group, onBack, fiscalDetails }) => {
   const handlePrint = () => {
     window.print();
   };
@@ -120,9 +121,9 @@ const InvoiceView: React.FC<InvoiceViewProps> = ({ group, onBack }) => {
         <div id="invoice-printable" className="printable-area bg-white p-8 sm:p-12 rounded-xl shadow-lg">
             <header className="flex justify-between items-start pb-8 border-b">
                 <div>
-                    <h2 className="text-3xl font-bold text-slate-800">Albergue Mª Rosa Molas</h2>
-                    <p className="text-slate-500">Calle Falsa, 123</p>
-                    <p className="text-slate-500">12001 Castellón, España</p>
+                    <h2 className="text-3xl font-bold text-slate-800">{fiscalDetails.companyName}</h2>
+                    <p className="text-slate-500">{fiscalDetails.address}</p>
+                    <p className="text-slate-500">{fiscalDetails.taxId}</p>
                 </div>
                 <div className="text-right">
                     <h1 className="text-4xl font-bold text-slate-800 uppercase tracking-widest">Factura</h1>
@@ -186,6 +187,7 @@ const InvoiceView: React.FC<InvoiceViewProps> = ({ group, onBack }) => {
 
             <footer className="mt-12 pt-6 border-t text-center text-slate-500 text-sm">
                 <p>Gracias por su estancia.</p>
+                <p>{fiscalDetails.companyName} - {fiscalDetails.taxId} - {fiscalDetails.phone} - {fiscalDetails.email}</p>
             </footer>
         </div>
     </div>

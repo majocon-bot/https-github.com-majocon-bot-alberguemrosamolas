@@ -5,8 +5,9 @@ import { DiningIcon } from './icons/DiningIcon';
 import { ClipboardIcon } from './icons/ClipboardIcon';
 import { HomeIcon } from './icons/HomeIcon';
 import { BriefcaseIcon } from './icons/BriefcaseIcon';
+import { SettingsIcon } from './icons/SettingsIcon';
 
-type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'dining';
+type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'dining' | 'settings';
 
 interface HeaderProps {
   currentView: View;
@@ -24,7 +25,7 @@ const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
         <div className="text-2xl font-bold text-slate-800">
           Albergue Mª Rosa Molas
         </div>
-        <div className="flex space-x-2 md:space-x-4">
+        <div className="flex space-x-1 md:space-x-2">
           <button
             onClick={() => setView('dashboard')}
             className={`${baseClasses} ${currentView === 'dashboard' ? activeClasses : inactiveClasses}`}
@@ -72,6 +73,14 @@ const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
           >
             <DiningIcon className="w-5 h-5" />
             <span className="hidden md:inline">Comedor</span>
+          </button>
+          <button
+            onClick={() => setView('settings')}
+            className={`${baseClasses} ${currentView === 'settings' ? activeClasses : inactiveClasses}`}
+            aria-current={currentView === 'settings' ? 'page' : undefined}
+          >
+            <SettingsIcon className="w-5 h-5" />
+            <span className="hidden md:inline">Ajustes</span>
           </button>
         </div>
       </nav>
