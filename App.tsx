@@ -280,6 +280,15 @@ const App: React.FC = () => {
     setView('dashboard');
   };
 
+  const handlePrintConfirmation = () => {
+    document.querySelectorAll('.printable-area').forEach(el => el.classList.remove('printable-area'));
+    const printableElement = document.getElementById('booking-confirmation-area');
+    if (printableElement) {
+        printableElement.classList.add('printable-area');
+        window.print();
+    }
+  };
+
   const getStepDescription = () => {
     switch (bookingStep) {
         case 'options':
@@ -316,7 +325,7 @@ const App: React.FC = () => {
 
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
-        <div className="max-w-3xl w-full bg-white rounded-2xl shadow-2xl p-8 md:p-12 text-center transform transition-all animate-fade-in-up">
+        <div id="booking-confirmation-area" className="max-w-3xl w-full bg-white rounded-2xl shadow-2xl p-8 md:p-12 text-center transform transition-all animate-fade-in-up">
           <svg className="w-20 h-20 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           <h1 className="text-4xl font-extrabold text-slate-800 mt-4">¡Reserva Confirmada!</h1>
           <p className="text-2xl font-semibold text-indigo-600 mt-4">"{confirmation.groupStayName}"</p>
@@ -424,12 +433,18 @@ const App: React.FC = () => {
              </div>
           </div>
           
-          <div className="mt-10 space-y-4">
+          <div className="mt-10 space-y-4 no-print">
             <button 
               onClick={handleStartOver}
               className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg"
             >
               Hacer Otra Reserva
+            </button>
+            <button 
+              onClick={handlePrintConfirmation}
+              className="w-full bg-slate-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-slate-700 transition-all duration-300 shadow-md hover:shadow-lg"
+            >
+              Imprimir Reserva
             </button>
             <button 
               onClick={handleGoToDashboard}
