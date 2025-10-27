@@ -86,4 +86,5 @@ export interface ServiceBooking {
   endTime: string;
   price?: number;
   priceUnit?: 'per_day' | 'per_hour' | 'one_time';
+  slotIndex: number;
 }

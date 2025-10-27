@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { RoomSelection, BookingDetails, Reservation, GroupedReservation, GroupedReservationWithCost, TimeSlot } from './types';
+import { RoomSelection, BookingDetails, Reservation, GroupedReservation, GroupedReservationWithCost, TimeSlot, ServiceBooking } from './types';
 import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, MOCK_RESERVATIONS, DINING_OPTIONS } from './constants';
 import RoomTypeCard from './components/RoomTypeCard';
 import BookingSummary from './components/BookingSummary';
@@ -230,7 +230,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleStartEdit = (group: GroupedReservation) => {
+  const handleStartEdit = (group: GroupedReservation, step: BookingStep = 'options') => {
     setEditingGroup(group);
 
     const initialSelection: RoomSelection = {};
@@ -254,7 +254,71 @@ const App: React.FC = () => {
     }
 
     setView('booking');
-    setBookingStep('options');
+    setBookingStep(step);
+  };
+
+  const handleEditServiceBooking = (bookingToEdit: ServiceBooking) => {
+    const guestReservations = reservations.filter(r => r.guestName === bookingToEdit.guestName);
+    if (guestReservations.length === 0) {
+      console.error("Could not find group to edit");
+      return;
+    }
+    const firstRes = guestReservations[0];
+    const minCheckIn = guestReservations.reduce((min, res) => res.checkIn < min ? res.checkIn : min, firstRes.checkIn);
+    const maxCheckOut = guestReservations.reduce((max, res) => res.checkOut > max ? res.checkOut : max, firstRes.checkOut);
+    const roomSummary = guestReservations.reduce((summary, res) => {
+        summary[res.roomType] = (summary[res.roomType] || 0) + 1;
+        return summary;
+    }, {} as { [key: string]: number });
+    
+    const groupToEdit: GroupedReservation = {
+        guestName: bookingToEdit.guestName,
+        minCheckIn,
+        maxCheckOut,
+        roomSummary,
+        diningSummary: firstRes.dining || {},
+        otherServicesSummary: firstRes.otherServices || {},
+        totalGuests: 0, 
+        reservations: guestReservations,
+    };
+    handleStartEdit(groupToEdit, 'schedule');
+  };
+
+  const handleDeleteServiceBooking = (bookingToDelete: ServiceBooking) => {
+    const formattedDate = new Date(bookingToDelete.date).toLocaleDateString('es-ES', {timeZone: 'UTC'});
+    if (!window.confirm(`¿Estás seguro de que quieres eliminar la reserva de "${bookingToDelete.serviceName}" para ${bookingToDelete.guestName} de ${bookingToDelete.startTime} a ${bookingToDelete.endTime} el ${formattedDate}?`)) {
+        return;
+    }
+
+    setReservations(prevReservations => {
+        return prevReservations.map(res => {
+            if (res.guestName !== bookingToDelete.guestName) {
+                return res;
+            }
+
+            const updatedRes = JSON.parse(JSON.stringify(res));
+
+            if (updatedRes.otherServices && updatedRes.otherServices[bookingToDelete.date] && updatedRes.otherServices[bookingToDelete.date][bookingToDelete.serviceId]) {
+                const slots = updatedRes.otherServices[bookingToDelete.date][bookingToDelete.serviceId];
+                
+                if (bookingToDelete.slotIndex < slots.length) {
+                    slots.splice(bookingToDelete.slotIndex, 1);
+                }
+                
+                if (slots.length === 0) {
+                    delete updatedRes.otherServices[bookingToDelete.date][bookingToDelete.serviceId];
+                }
+
+                if (Object.keys(updatedRes.otherServices[bookingToDelete.date]).length === 0) {
+                    delete updatedRes.otherServices[bookingToDelete.date];
+                }
+                if (Object.keys(updatedRes.otherServices).length === 0) {
+                    delete updatedRes.otherServices;
+                }
+            }
+            return updatedRes;
+        });
+    });
   };
 
   const handleGenerateInvoice = (group: GroupedReservationWithCost) => {
@@ -623,7 +687,15 @@ const App: React.FC = () => {
             />
         )}
         {view === 'services' && (
-           <ServicesListView reservations={reservations} />
+           <ServicesListView 
+            reservations={reservations} 
+            onDeleteService={handleDeleteServiceBooking}
+            onEditService={handleEditServiceBooking}
+            onNewBooking={() => {
+                handleStartOver();
+                setView('booking');
+            }}
+           />
         )}
         {view === 'dining' && (
            <DiningHallView reservations={reservations} />
