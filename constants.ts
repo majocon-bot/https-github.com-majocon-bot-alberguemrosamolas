@@ -106,12 +106,12 @@ export const SERVICE_TYPES: RoomType[] = [
   },
   {
     id: 'secretarial_services',
-    name: 'SERVICIOS SECRETARIA',
+    name: 'FOTOCOPIAS',
     description: 'Servicio de fotocopias y soporte administrativo. El precio es por unidad (ej. por fotocopia).',
     capacity: 1, 
     available: 1,
     image: 'https://picsum.photos/seed/secretarial/600/400',
-    price: 0.10,
+    price: 0.07,
     priceUnit: 'one_time',
   },
 ];
