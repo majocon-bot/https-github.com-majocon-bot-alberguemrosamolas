@@ -109,16 +109,21 @@ const DiningHallView: React.FC<DiningHallViewProps> = ({ reservations }) => {
     // FIX: The previous logic had a flaw where it would overwrite reservations for the same guest,
     // potentially losing dining information. It was also inefficiently placed inside a loop.
     // The new logic correctly finds a representative reservation for each guest group once.
-    const representativeReservationsByGuest = Object.values(
-      reservations.reduce((acc, res) => {
+    const reservationsByGuest = reservations.reduce(
+      (acc, res) => {
         // Group all reservations by guest name
         (acc[res.guestName] = acc[res.guestName] || []).push(res);
         return acc;
-      }, {} as Record<string, Reservation[]>)
-    ).map(guestReservations => {
+      },
+      {} as Record<string, Reservation[]>
+    );
+
+    const representativeReservationsByGuest = Object.values(
+      reservationsByGuest
+    ).map((guestReservations) => {
       // For each group, find one reservation that contains the dining info.
       // This avoids double-counting if dining info is duplicated across reservations for a single booking.
-      return guestReservations.find(r => r.dining) || guestReservations[0];
+      return guestReservations.find((r) => r.dining) || guestReservations[0];
     });
 
     dates.forEach(date => {

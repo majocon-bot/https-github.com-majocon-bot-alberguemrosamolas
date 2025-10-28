@@ -1,10 +1,72 @@
 import { RoomType, IndividualRoom, Reservation } from './types';
 
+// Source of truth from the provided PDF
+const ALL_ROOMS_DATA = [
+    // Cuádruple (Capacity 4)
+    { number: 16, type: 'quad', typeName: 'Habitación Cuádruple', floor: '1°' },
+    { number: 18, type: 'quad', typeName: 'Habitación Cuádruple', floor: '1°' },
+    { number: 20, type: 'quad', typeName: 'Habitación Cuádruple', floor: '1°' },
+    { number: 44, type: 'quad', typeName: 'Habitación Cuádruple', floor: '2°' },
+    { number: 46, type: 'quad', typeName: 'Habitación Cuádruple', floor: '2°' },
+    { number: 48, type: 'quad', typeName: 'Habitación Cuádruple', floor: '2°' },
+    // Doble (Capacity 2)
+    { number: 21, type: 'double', typeName: 'Habitación Doble', floor: '1°' },
+    { number: 22, type: 'double', typeName: 'Habitación Doble', floor: '1°' },
+    { number: 45, type: 'double', typeName: 'Habitación Doble', floor: '2°' },
+    { number: 50, type: 'double', typeName: 'Habitación Doble', floor: '2°' },
+    // Individual (Capacity 1)
+    { number: 1, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 2, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 3, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 4, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 5, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 6, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 7, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 8, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 9, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 10, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 11, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 12, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 13, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 14, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 15, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 17, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 19, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 30, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 32, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 38, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 40, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 42, type: 'single', typeName: 'Habitación Individual', floor: '1°' },
+    { number: 29, type: 'single', typeName: 'Habitación Individual', floor: '2°' },
+    { number: 31, type: 'single', typeName: 'Habitación Individual', floor: '2°' },
+    { number: 33, type: 'single', typeName: 'Habitación Individual', floor: '2°' },
+    { number: 35, type: 'single', typeName: 'Habitación Individual', floor: '2°' },
+    { number: 37, type: 'single', typeName: 'Habitación Individual', floor: '2°' },
+    { number: 39, type: 'single', typeName: 'Habitación Individual', floor: '2°' },
+    { number: 41, type: 'single', typeName: 'Habitación Individual', floor: '2°' },
+    { number: 43, type: 'single', typeName: 'Habitación Individual', floor: '2°' },
+    // Con 2 Literas (Capacity 4)
+    { number: 23, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '1°' },
+    { number: 25, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '1°' },
+    { number: 27, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '1°' },
+    { number: 28, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '1°' },
+    { number: 47, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '2°' },
+    { number: 49, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '2°' },
+    { number: 51, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '2°' },
+    { number: 53, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '2°' },
+    // Triple (Capacity 3)
+    { number: 24, type: 'triple', typeName: 'Habitación Triple', floor: '1°' },
+    { number: 52, type: 'triple', typeName: 'Habitación Triple', floor: '2°' },
+    // Especial (Capacity 2)
+    { number: 26, type: 'special', typeName: 'Habitación Especial', floor: '1°' },
+    { number: 54, type: 'special', typeName: 'Habitación Especial', floor: '2°' },
+];
+
 export const ROOM_TYPES: RoomType[] = [
   {
     id: 'quad',
     name: 'Habitación Cuádruple',
-    description: 'Ideal para pequeños grupos y amigos.',
+    description: 'Ideal para pequeños grupos y amigos. Capacidad para 4 personas.',
     capacity: 4,
     available: 6,
     image: 'https://picsum.photos/seed/quad/600/400',
@@ -14,7 +76,7 @@ export const ROOM_TYPES: RoomType[] = [
   {
     id: 'double',
     name: 'Habitación Doble',
-    description: 'Perfecta para parejas o compañeros.',
+    description: 'Perfecta para parejas o compañeros. Capacidad para 2 personas.',
     capacity: 2,
     available: 4,
     image: 'https://picsum.photos/seed/double/600/400',
@@ -24,7 +86,7 @@ export const ROOM_TYPES: RoomType[] = [
   {
     id: 'single',
     name: 'Habitación Individual',
-    description: 'Privacidad y confort para viajeros solos.',
+    description: 'Privacidad y confort para viajeros solos. Capacidad para 1 persona.',
     capacity: 1,
     available: 30,
     image: 'https://picsum.photos/seed/single/600/400',
@@ -33,8 +95,8 @@ export const ROOM_TYPES: RoomType[] = [
   },
   {
     id: 'bunk',
-    name: 'Habitación con Doble Litera',
-    description: 'Una opción divertida y económica.',
+    name: 'Habitación con 2 Literas',
+    description: 'Una opción divertida y económica. Capacidad para 4 personas.',
     capacity: 4,
     available: 8,
     image: 'https://picsum.photos/seed/bunk/600/400',
@@ -44,7 +106,7 @@ export const ROOM_TYPES: RoomType[] = [
   {
     id: 'triple',
     name: 'Habitación Triple',
-    description: 'Espacio extra para grupos de tres.',
+    description: 'Espacio extra para grupos de tres. Capacidad para 3 personas.',
     capacity: 3,
     available: 2,
     image: 'https://picsum.photos/seed/triple/600/400',
@@ -54,8 +116,8 @@ export const ROOM_TYPES: RoomType[] = [
   {
     id: 'special',
     name: 'Habitación Especial',
-    description: 'Perfecta para familias pequeñas (2+1), con una cama supletoria.',
-    capacity: 3,
+    description: 'Perfecta para parejas. Capacidad para 2 personas.',
+    capacity: 2,
     available: 2,
     image: 'https://picsum.photos/seed/special/600/400',
     price: 85,
@@ -117,13 +179,11 @@ export const SERVICE_TYPES: RoomType[] = [
 ];
 
 
-export const INDIVIDUAL_ROOMS: IndividualRoom[] = ROOM_TYPES.flatMap(roomType => 
-  Array.from({ length: roomType.available }, (_, i) => ({
-      id: `${roomType.id}_${i + 1}`,
-      type: roomType.id,
-      name: `${roomType.name} ${i + 1}`,
-  }))
-);
+export const INDIVIDUAL_ROOMS: IndividualRoom[] = ALL_ROOMS_DATA.map(room => ({
+    id: `${room.type}_${room.number}`,
+    type: room.type,
+    name: `${room.typeName} ${room.number} (${room.floor})`,
+}));
 
 export const INDIVIDUAL_SERVICES: IndividualRoom[] = SERVICE_TYPES.flatMap(serviceType => 
   Array.from({ length: serviceType.available }, (_, i) => ({
@@ -149,7 +209,7 @@ const formatDate = (date: Date) => date.toISOString().split('T')[0];
 export const MOCK_RESERVATIONS: Reservation[] = [
   { 
     id: 'res1', 
-    roomId: 'quad_1', 
+    roomId: 'quad_16', 
     roomType: 'quad', 
     guestName: 'Alice', 
     dni: '12345678A',
@@ -165,7 +225,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
   },
   { 
     id: 'res6', 
-    roomId: 'double_1', 
+    roomId: 'double_21', 
     roomType: 'double', 
     guestName: 'Alice', 
     dni: '12345678A',
@@ -180,7 +240,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
   },
   { 
     id: 'res2', 
-    roomId: 'double_2', 
+    roomId: 'double_22', 
     roomType: 'double', 
     guestName: 'Bob', 
     dni: '87654321B',
@@ -255,7 +315,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
   },
   { 
     id: 'res4', 
-    roomId: 'quad_2', 
+    roomId: 'quad_18', 
     roomType: 'quad', 
     guestName: 'Diana', 
     dni: '55667788D',
@@ -272,7 +332,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
   },
   { 
     id: 'res5', 
-    roomId: 'bunk_3', 
+    roomId: 'bunk_27', 
     roomType: 'bunk', 
     guestName: 'Eve', 
     dni: '99887766E',
