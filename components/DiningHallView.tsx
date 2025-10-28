@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo } from 'react';
 import { Reservation, DiningSelection } from '../types';
 import { DINING_OPTIONS } from '../constants';
@@ -109,6 +111,8 @@ const DiningHallView: React.FC<DiningHallViewProps> = ({ reservations }) => {
     // FIX: The previous logic had a flaw where it would overwrite reservations for the same guest,
     // potentially losing dining information. It was also inefficiently placed inside a loop.
     // The new logic correctly finds a representative reservation for each guest group once.
+    // FIX: The return type of `reduce` is inferred from its initial value. By casting the initial
+    // empty object to the correct type, we ensure `reservationsByGuest` is correctly typed.
     const reservationsByGuest = reservations.reduce(
       (acc, res) => {
         // Group all reservations by guest name

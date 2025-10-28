@@ -1,7 +1,9 @@
+
 import { RoomType, IndividualRoom, Reservation } from './types';
 
 // Source of truth from the provided PDF
-const ALL_ROOMS_DATA = [
+// FIX: Export ALL_ROOMS_DATA to make it available for import in other modules.
+export const ALL_ROOMS_DATA = [
     // Cuádruple (Capacity 4)
     { number: 16, type: 'quad', typeName: 'Habitación Cuádruple', floor: '1°' },
     { number: 18, type: 'quad', typeName: 'Habitación Cuádruple', floor: '1°' },
