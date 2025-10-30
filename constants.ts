@@ -1,4 +1,5 @@
 
+// FIX: Imported DiningSelection to use as a type for DINING_OPTIONS.
 import { RoomType, IndividualRoom, Reservation, IndividualReservation, DiningSelection } from './types';
 
 // Source of truth from the provided PDF
@@ -186,13 +187,13 @@ export const SERVICE_TYPES: RoomType[] = [
   },
 ];
 
-// FIX: Add dining options constant for dining services.
+// FIX: Added DINING_OPTIONS constant for use in dining-related components.
 export const DINING_OPTIONS: { id: keyof DiningSelection, label: string }[] = [
     { id: 'breakfast', label: 'Desayuno' },
-    { id: 'lunch', label: 'Comida' },
-    { id: 'dinner', label: 'Cena' },
     { id: 'morningSnack', label: 'Almuerzo' },
+    { id: 'lunch', label: 'Comida' },
     { id: 'afternoonSnack', label: 'Merienda' },
+    { id: 'dinner', label: 'Cena' },
 ];
 
 export const INDIVIDUAL_ROOMS: IndividualRoom[] = ALL_ROOMS_DATA.map(room => ({
@@ -264,6 +265,15 @@ export const MOCK_RESERVATIONS: Reservation[] = [
         },
         [formatDate(new Date(today.getFullYear(), today.getMonth(), 8))]: {
             'secretarial_services': 25
+        },
+    },
+    // FIX: Added mock dining data for testing purposes.
+    dining: {
+        [formatDate(new Date(today.getFullYear(), today.getMonth(), 7))]: {
+            breakfast: 2, lunch: 2, dinner: 0, morningSnack: 0, afternoonSnack: 0
+        },
+        [formatDate(new Date(today.getFullYear(), today.getMonth(), 8))]: {
+            breakfast: 2, lunch: 0, dinner: 2, morningSnack: 0, afternoonSnack: 0
         },
     }
   },

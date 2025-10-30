@@ -69,8 +69,6 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({
           roomSummary: {},
           otherServicesSummary: res.otherServices || {},
           unitServicesSummary: res.unitServices || {},
-          // FIX: Add diningSummary to correctly group dining services info.
-          diningSummary: res.dining || {},
           totalGuests: 0,
           reservations: [],
         };

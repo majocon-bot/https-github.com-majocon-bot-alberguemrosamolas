@@ -25,7 +25,10 @@
         animation: fade-in-up 0.5s ease-out forwards;
     }
     @media print {
-      body * {
+      body.printing-calendar {
+        /* Landscape-specific styles will be injected by JS */
+      }
+      body:not(.printing-calendar) * {
         visibility: hidden;
       }
       .printable-area, .printable-area * {
@@ -37,7 +40,7 @@
         top: 0;
         width: 100%;
         box-shadow: none !important;
-        border: 1px solid #e2e8f0;
+        border: none;
       }
        .no-print {
         display: none !important;
@@ -45,21 +48,38 @@
       .break-before-page {
         page-break-before: always;
       }
-      
-      /* Calendar Print Styles */
-      #occupancy-calendar-printable-area table {
-        font-size: 8px;
-        width: 100%;
+    }
+    
+    /* These styles are only activated when body has 'printing-calendar' class */
+    @media print {
+      body.printing-calendar .printable-area * {
+        visibility: visible;
       }
-      #occupancy-calendar-printable-area th,
-      #occupancy-calendar-printable-area td {
-        padding: 2px;
-        min-width: auto !important;
+      body.printing-calendar #root > div > *:not(.printable-area) {
+        display: none;
+      }
+      body.printing-calendar .printable-area {
+        visibility: visible;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+      }
+      body.printing-calendar .printable-area table {
+        font-size: 7px; /* Fine-tune font size */
+        width: 100%;
+        table-layout: fixed; /* Important for consistent column widths */
+      }
+      body.printing-calendar .printable-area th,
+      body.printing-calendar .printable-area td {
+        padding: 1px 2px;
         white-space: normal;
         word-break: break-word;
+        overflow: hidden;
       }
-       #occupancy-calendar-printable-area .sticky {
-        position: static;
+      body.printing-calendar .printable-area .sticky {
+        position: static; /* Remove sticky positioning for print */
       }
     }
   </style>

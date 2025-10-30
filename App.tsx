@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { RoomSelection, BookingDetails, Reservation, GroupedReservation, GroupedReservationWithCost, TimeSlot, ServiceBooking, FiscalDetails, IndividualReservation } from './types';
 import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, MOCK_RESERVATIONS, ALL_ROOMS_DATA, MOCK_INDIVIDUAL_RESERVATIONS } from './constants';
@@ -20,8 +18,11 @@ import RoomStatusView from './components/RoomStatusView';
 import IndividualReservationsView from './components/IndividualReservationsView';
 import IndividualBookingForm from './components/IndividualBookingForm';
 import IndividualReservationPrintView from './components/IndividualReservationPrintView';
+// FIX: Import the DiningHallView component to be used in the main app layout.
+import DiningHallView from './components/DiningHallView';
 
-type View = 'dashboard' | 'booking' | 'individual_reservation' | 'calendar' | 'reservations' | 'services' | 'invoice' | 'settings' | 'room_status';
+// FIX: Added 'dining_hall' to the View type to allow navigation to the dining hall summary.
+type View = 'dashboard' | 'booking' | 'individual_reservation' | 'calendar' | 'reservations' | 'services' | 'invoice' | 'settings' | 'room_status' | 'dining_hall';
 type BookingStep = 'options' | 'schedule' | 'loading' | 'confirmed';
 
 const today = new Date();
@@ -40,7 +41,7 @@ const initialDetails: BookingDetails = {
     observations: '',
     otherServices: {},
     unitServices: {},
-    // FIX: Initialize dining property to support dining services.
+    // FIX: Initialize dining property in the booking details.
     dining: {},
 };
 
@@ -218,7 +219,7 @@ const App: React.FC = () => {
           checkOut: bookingDetails.checkOut,
           otherServices: bookingDetails.otherServices,
           unitServices: bookingDetails.unitServices,
-          // FIX: Pass dining details to the new reservation.
+          // FIX: Persist dining information when saving the booking.
           dining: bookingDetails.dining,
         });
       });
@@ -274,8 +275,8 @@ const App: React.FC = () => {
         observations: firstRes.observations,
         otherServices: group.otherServicesSummary,
         unitServices: group.unitServicesSummary,
-        // FIX: Load dining details for editing, provide a default empty object.
-        dining: group.diningSummary || {},
+        // FIX: Load dining information when starting to edit a reservation.
+        dining: group.diningSummary,
       });
     }
 
@@ -305,7 +306,7 @@ const App: React.FC = () => {
         roomSummary,
         otherServicesSummary: firstRes.otherServices || {},
         unitServicesSummary: firstRes.unitServices || {},
-        // FIX: Pass dining summary when creating group for editing.
+        // FIX: Include dining summary when creating a group to edit.
         diningSummary: firstRes.dining || {},
         totalGuests: 0, 
         reservations: guestReservations,
@@ -825,6 +826,10 @@ const App: React.FC = () => {
                 onExport={handleExportData}
                 onImport={handleImportData}
             />
+        )}
+        {/* FIX: Render the DiningHallView component when the corresponding view is active. */}
+        {view === 'dining_hall' && (
+           <DiningHallView reservations={reservations} />
         )}
         {view === 'invoice' && invoiceData && (
           <InvoiceView group={invoiceData} onBack={() => setView('reservations')} fiscalDetails={fiscalDetails} />

@@ -1,6 +1,6 @@
 
-
 import React, { useState, useMemo } from 'react';
+// FIX: Import DiningSelection type and DINING_OPTIONS constant to resolve module errors.
 import { Reservation, DiningSelection } from '../types';
 import { DINING_OPTIONS } from '../constants';
 import { PrintIcon } from './icons/PrintIcon';

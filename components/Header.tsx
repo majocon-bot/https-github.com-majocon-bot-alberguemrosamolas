@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CalendarIcon } from './icons/CalendarIcon';
 import { ListIcon } from './icons/ListIcon';
@@ -7,8 +8,11 @@ import { BriefcaseIcon } from './icons/BriefcaseIcon';
 import { SettingsIcon } from './icons/SettingsIcon';
 import { ClipboardCheckIcon } from './icons/ClipboardCheckIcon';
 import { UserPlusIcon } from './icons/UserPlusIcon';
+// FIX: Import DiningIcon for the new navigation button.
+import { DiningIcon } from './icons/DiningIcon';
 
-type View = 'dashboard' | 'booking' | 'individual_reservation' | 'calendar' | 'reservations' | 'services' | 'settings' | 'room_status';
+// FIX: Added 'dining_hall' view to the type definition.
+type View = 'dashboard' | 'booking' | 'individual_reservation' | 'calendar' | 'reservations' | 'services' | 'settings' | 'room_status' | 'dining_hall';
 
 interface HeaderProps {
   currentView: View;
@@ -82,6 +86,15 @@ const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
           >
             <BriefcaseIcon className="w-5 h-5" />
             <span className="hidden md:inline">Salas</span>
+          </button>
+          {/* FIX: Added navigation button for the Dining Hall view. */}
+          <button
+            onClick={() => setView('dining_hall')}
+            className={`${baseClasses} ${currentView === 'dining_hall' ? activeClasses : inactiveClasses}`}
+            aria-current={currentView === 'dining_hall' ? 'page' : undefined}
+          >
+            <DiningIcon className="w-5 h-5" />
+            <span className="hidden md:inline">Comedor</span>
           </button>
           <button
             onClick={() => setView('settings')}

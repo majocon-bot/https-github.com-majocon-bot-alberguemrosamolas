@@ -20,7 +20,7 @@ export interface TimeSlot {
   endTime: string;
 }
 
-// FIX: Add DiningSelection interface for dining services.
+// FIX: Added DiningSelection interface for dining services.
 export interface DiningSelection {
   breakfast: number;
   lunch: number;
@@ -39,7 +39,7 @@ export interface BookingDetails {
   observations: string;
   otherServices: { [date: string]: { [serviceId: string]: TimeSlot[] } };
   unitServices?: { [date: string]: { [serviceId: string]: number } };
-  // FIX: Add optional dining property for dining services.
+  // FIX: Added dining property to store dining selections.
   dining?: { [date: string]: DiningSelection };
 }
 
@@ -61,7 +61,7 @@ export interface Reservation {
   checkOut: string; // YYYY-MM-DD
   otherServices?: { [date: string]: { [serviceId: string]: TimeSlot[] } };
   unitServices?: { [date: string]: { [serviceId: string]: number } };
-  // FIX: Add optional dining property for dining services.
+  // FIX: Added dining property to store dining information with a reservation.
   dining?: { [date: string]: DiningSelection };
 }
 
@@ -79,7 +79,7 @@ export interface GroupedReservation {
   roomSummary: { [roomType: string]: number };
   otherServicesSummary: { [date: string]: { [serviceId: string]: TimeSlot[] } };
   unitServicesSummary?: { [date: string]: { [serviceId: string]: number } };
-  // FIX: Add optional diningSummary property for dining services.
+  // FIX: Added diningSummary to store aggregated dining information for a group.
   diningSummary?: { [date: string]: DiningSelection };
   totalGuests: number;
   reservations: Reservation[]; // Keep track of original reservations

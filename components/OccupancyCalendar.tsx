@@ -74,13 +74,21 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
   
   const handlePrint = () => {
     const printableElement = document.getElementById('occupancy-calendar-printable-area');
+    const style = document.createElement('style');
+    style.innerHTML = `@page { size: landscape; margin: 20px; }`;
+    style.id = 'landscape-print-style';
+    
+    document.head.appendChild(style);
+    document.body.classList.add('printing-calendar');
+    
     if (printableElement) {
         printableElement.classList.add('printable-area');
         window.print();
-        // Delay removal to allow print dialog to process
-        setTimeout(() => {
-            printableElement.classList.remove('printable-area');
-        }, 500);
+        
+        // Cleanup after print dialog is closed or cancelled
+        printableElement.classList.remove('printable-area');
+        document.body.classList.remove('printing-calendar');
+        document.head.removeChild(style);
     }
   };
 
