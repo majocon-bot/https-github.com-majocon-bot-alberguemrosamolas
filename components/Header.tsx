@@ -40,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
             aria-current={currentView === 'booking' ? 'page' : undefined}
           >
             <ListIcon className="w-5 h-5" />
-            <span className="hidden md:inline">Hacer Reserva</span>
+            <span className="hidden md:inline">Reserva Grupal</span>
           </button>
            <button
             onClick={() => setView('room_status')}

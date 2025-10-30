@@ -31,6 +31,7 @@ export interface DiningSelection {
 
 export interface BookingDetails {
   name: string;
+  groupName: string;
   dni: string;
   phone: string;
   checkIn: string;
@@ -52,6 +53,7 @@ export interface Reservation {
   roomId: string; // quad_1, quad_2
   roomType: string; // quad
   guestName: string;
+  groupName?: string;
   dni: string;
   phone: string;
   observations: string;
@@ -71,6 +73,7 @@ export interface IndividualRoom {
 
 export interface GroupedReservation {
   guestName: string;
+  groupName?: string;
   minCheckIn: string;
   maxCheckOut: string;
   roomSummary: { [roomType: string]: number };

@@ -12,7 +12,7 @@ const generatePrompt = (booking: FullBooking, allItems: RoomType[], totalRooms: 
     })
     .join(', ');
 
-  let prompt = `Actúa como un conserje de hotel creativo. Genera un breve y acogedor mensaje de confirmación para una reserva de grupo a nombre de ${details.name}.`;
+  let prompt = `Actúa como un conserje de hotel creativo. Genera un breve y acogedor mensaje de confirmación para la reserva del grupo "${details.groupName}", que está a nombre de ${details.name}.`;
 
   if (totalGuests > 0) {
       prompt += `\nLa reserva es para ${totalGuests} personas en ${totalRooms} habitaciones, desde el ${details.checkIn} hasta el ${details.checkOut}.`;
@@ -45,7 +45,7 @@ export const generateBookingConfirmation = async (
     // Return a mock response if API key is not set
     return {
         groupStayName: "La Aventura del Viajero",
-        confirmationMessage: `¡Hola ${booking.details.name}! Tu grupo está listo para una estancia inolvidable. Hemos preparado todo para que vuestra experiencia sea cómoda y emocionante. ¡Nos vemos pronto!`
+        confirmationMessage: `¡Hola ${booking.details.name}! El grupo "${booking.details.groupName}" está listo para una estancia inolvidable. Hemos preparado todo para que vuestra experiencia sea cómoda y emocionante. ¡Nos vemos pronto!`
     };
   }
 

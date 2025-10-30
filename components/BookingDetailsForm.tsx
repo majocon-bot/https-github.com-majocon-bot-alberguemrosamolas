@@ -34,18 +34,22 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({ details, setDet
         <div className="bg-white p-8 rounded-xl shadow-lg space-y-8 animate-fade-in-up">
             {/* Personal Details */}
             <fieldset>
-                <legend className="text-2xl font-bold text-slate-800 mb-4">Datos Personales</legend>
+                <legend className="text-2xl font-bold text-slate-800 mb-4">Datos de la Reserva</legend>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                        <label htmlFor="groupName" className="block text-sm font-medium text-slate-600 mb-1">Nombre Grupo:</label>
+                        <input type="text" name="groupName" id="groupName" value={details.groupName || ''} onChange={handleDetailChange} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required/>
+                    </div>
                     <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-slate-600 mb-1">Nombre y Apellidos</label>
+                        <label htmlFor="name" className="block text-sm font-medium text-slate-600 mb-1">Nombre y Apellidos (Responsable)</label>
                         <input type="text" name="name" id="name" value={details.name} onChange={handleDetailChange} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required/>
                     </div>
                      <div>
-                        <label htmlFor="dni" className="block text-sm font-medium text-slate-600 mb-1">DNI</label>
+                        <label htmlFor="dni" className="block text-sm font-medium text-slate-600 mb-1">DNI (Responsable)</label>
                         <input type="text" name="dni" id="dni" value={details.dni} onChange={handleDetailChange} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required/>
                     </div>
                     <div>
-                        <label htmlFor="phone" className="block text-sm font-medium text-slate-600 mb-1">Teléfono</label>
+                        <label htmlFor="phone" className="block text-sm font-medium text-slate-600 mb-1">Teléfono (Responsable)</label>
                         <input type="tel" name="phone" id="phone" value={details.phone} onChange={handleDetailChange} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required/>
                     </div>
                 </div>

@@ -29,6 +29,7 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
       if (!acc[res.guestName]) {
         acc[res.guestName] = {
           guestName: res.guestName,
+          groupName: res.groupName,
           minCheckIn: res.checkIn,
           maxCheckOut: res.checkOut,
           roomSummary: {},
@@ -278,7 +279,8 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
                     <div key={group.guestName} id={`reservation-${group.guestName}`} className="bg-white p-6 rounded-xl shadow-lg flex flex-col transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
                         <div className="flex justify-between items-start mb-2">
                             <div>
-                                <h2 className="text-2xl font-bold text-indigo-700">{group.guestName}</h2>
+                                <h2 className="text-2xl font-bold text-indigo-700">{group.groupName || group.guestName}</h2>
+                                {group.groupName && <p className="text-sm text-slate-500 -mt-1 mb-2">Responsable: {group.guestName}</p>}
                                 <div className="flex items-center space-x-1 no-print">
                                     <button onClick={() => onEditGroup(group)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors" title="Editar Reserva"><EditIcon className="w-5 h-5"/></button>
                                     <button onClick={() => onDeleteGroup(group.guestName)} className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors" title="Borrar Grupo"><TrashIcon className="w-5 h-5"/></button>

@@ -30,6 +30,7 @@ const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
 const initialDetails: BookingDetails = {
     name: '',
+    groupName: '',
     dni: '',
     phone: '',
     checkIn: formatDate(today),
@@ -206,6 +207,7 @@ const App: React.FC = () => {
           roomId: item.id,
           roomType: item.type,
           guestName: bookingDetails.name,
+          groupName: bookingDetails.groupName,
           dni: bookingDetails.dni,
           phone: bookingDetails.phone,
           observations: bookingDetails.observations,
@@ -260,6 +262,7 @@ const App: React.FC = () => {
     if (firstRes) {
       setBookingDetails({
         name: firstRes.guestName,
+        groupName: group.groupName || '',
         dni: firstRes.dni,
         phone: firstRes.phone,
         checkIn: group.minCheckIn,
@@ -291,6 +294,7 @@ const App: React.FC = () => {
     
     const groupToEdit: GroupedReservation = {
         guestName: bookingToEdit.guestName,
+        groupName: firstRes.groupName,
         minCheckIn,
         maxCheckOut,
         roomSummary,
@@ -457,6 +461,7 @@ const App: React.FC = () => {
           <div className="mt-8 pt-6 border-t border-slate-200 text-left">
              <h3 className="text-xl font-bold text-slate-700 mb-4">Detalles de la Reserva:</h3>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-600">
+                <p><strong>Grupo:</strong> {bookingDetails.groupName}</p>
                 <p><strong>A nombre de:</strong> {bookingDetails.name}</p>
                 <p><strong>DNI:</strong> {bookingDetails.dni}</p>
                 <p><strong>Teléfono:</strong> {bookingDetails.phone}</p>
@@ -678,7 +683,7 @@ const App: React.FC = () => {
                 {(bookingStep === 'options' || bookingStep === 'dining') && (
                     <button
                         onClick={handleNextStep}
-                        disabled={totalItems === 0 || !bookingDetails.name || !bookingDetails.dni || !bookingDetails.phone}
+                        disabled={totalItems === 0 || !bookingDetails.groupName || !bookingDetails.name || !bookingDetails.dni || !bookingDetails.phone}
                         className="w-full mt-8 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                     >
                         { bookingStep === 'options' && (totalGuests > 0 || totalServices > 0) ? 'Continuar' : (isEditing ? 'Guardar Cambios' : 'Confirmar Reserva')}
