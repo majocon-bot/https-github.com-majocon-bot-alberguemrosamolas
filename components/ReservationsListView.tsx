@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Reservation, GroupedReservation, GroupedReservationWithCost } from '../types';
-import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, DINING_OPTIONS, ALL_ROOMS_DATA } from '../constants';
+import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, ALL_ROOMS_DATA } from '../constants';
 import { UserIcon } from './icons/UserIcon';
 import { EditIcon } from './icons/EditIcon';
 import { TrashIcon } from './icons/TrashIcon';
@@ -32,10 +32,11 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
           minCheckIn: res.checkIn,
           maxCheckOut: res.checkOut,
           roomSummary: {},
-          // Assign dining and other services info from the first reservation of the group,
+          // Assign other services info from the first reservation of the group,
           // as it's duplicated across all reservations for that group booking.
-          diningSummary: res.dining || {},
           otherServicesSummary: res.otherServices || {},
+          // FIX: Added diningSummary to correctly group dining information.
+          diningSummary: res.dining || {},
           unitServicesSummary: res.unitServices || {},
           totalGuests: 0,
           reservations: [],
@@ -85,16 +86,6 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
             return sum;
         }, 0);
 
-        const diningCost = Object.values(group.diningSummary).reduce((dateSum, dailyServices) => {
-            return dateSum + Object.entries(dailyServices).reduce((serviceSum, [serviceKey, count]) => {
-                const option = DINING_OPTIONS.find(opt => opt.id === serviceKey);
-                if (option && count > 0) {
-                    return serviceSum + (option.price * count);
-                }
-                return serviceSum;
-            }, 0);
-        }, 0);
-
         const otherServicesCost = Object.values(group.otherServicesSummary).reduce((dateSum, dailyServices) => {
             return dateSum + Object.entries(dailyServices).reduce((serviceSum, [serviceId, slots]) => {
                 const serviceInfo = SERVICE_TYPES.find(s => s.id === serviceId);
@@ -126,7 +117,7 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
             }, 0);
         }, 0);
         
-        const totalCost = accommodationCost + diningCost + otherServicesCost + unitServicesCost;
+        const totalCost = accommodationCost + otherServicesCost + unitServicesCost;
 
 
         return { ...group, totalGuests, totalCost };
@@ -342,7 +333,7 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
                         )}
                         
                         {/* --- SEPARATOR & SERVICES SECTION --- */}
-                        {(serviceReservations.length > 0 || Object.keys(group.otherServicesSummary).length > 0 || Object.keys(group.diningSummary).length > 0) && (
+                        {(serviceReservations.length > 0 || Object.keys(group.otherServicesSummary).length > 0) && (
                             <>
                             <hr className="!my-3 border-slate-200" />
                             
@@ -413,30 +404,6 @@ const ReservationsListView: React.FC<ReservationsListViewProps> = ({ reservation
                                     </div>
                                 ) : (
                                     <p className="text-sm text-slate-400 italic">Sin uso detallado de servicios por unidad.</p>
-                                )}
-                            </div>
-
-                            <div>
-                                <h3 className="font-semibold text-slate-700 mb-2">Servicios de Comedor</h3>
-                                {Object.keys(group.diningSummary).length > 0 ? (
-                                    <div className="text-sm max-h-32 overflow-y-auto bg-slate-50 p-2 rounded-md space-y-2">
-                                        {Object.entries(group.diningSummary).sort(([dateA], [dateB]) => dateA.localeCompare(dateB)).map(([date, services]) => (
-                                            <div key={date}>
-                                                <p className="font-medium text-slate-600">{new Date(date).toLocaleDateString('es-ES', { month: 'long', day: 'numeric', timeZone: 'UTC' })}:</p>
-                                                <p className="pl-2 text-slate-500">
-                                                    {Object.entries(services)
-                                                        .filter(([, count]) => count > 0)
-                                                        .map(([service, count]) => {
-                                                            const serviceName = DINING_OPTIONS.find(opt => opt.id === service)?.label || service;
-                                                            return `${serviceName} (x${count})`;
-                                                        })
-                                                        .join(', ')}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-sm text-slate-400 italic">Sin servicios de comedor.</p>
                                 )}
                             </div>
                             </>

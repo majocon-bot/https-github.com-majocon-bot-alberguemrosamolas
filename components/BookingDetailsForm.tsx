@@ -24,6 +24,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({ details, setDet
         }
         
         // When dates change, reset dining and other services options
+        // FIX: Added reset for dining options to ensure data consistency when dates are changed.
         newDetails.dining = {};
         newDetails.otherServices = {};
         setDetails(newDetails);

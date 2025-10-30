@@ -1,5 +1,5 @@
 
-import { RoomType, IndividualRoom, Reservation } from './types';
+import { RoomType, IndividualRoom, Reservation, DiningSelection } from './types';
 
 // Source of truth from the provided PDF
 // FIX: Export ALL_ROOMS_DATA to make it available for import in other modules.
@@ -180,6 +180,15 @@ export const SERVICE_TYPES: RoomType[] = [
   },
 ];
 
+// FIX: Added DINING_OPTIONS to define available dining services.
+export const DINING_OPTIONS: { id: keyof DiningSelection; label: string }[] = [
+    { id: 'breakfast', label: 'Desayuno' },
+    { id: 'lunch', label: 'Comida' },
+    { id: 'dinner', label: 'Cena' },
+    { id: 'morningSnack', label: 'Almuerzo' },
+    { id: 'afternoonSnack', label: 'Merienda' },
+];
+
 
 export const INDIVIDUAL_ROOMS: IndividualRoom[] = ALL_ROOMS_DATA.map(room => ({
     id: `${room.type}_${room.number}`,
@@ -197,14 +206,6 @@ export const INDIVIDUAL_SERVICES: IndividualRoom[] = SERVICE_TYPES.flatMap(servi
 
 export const ALL_INDIVIDUAL_ITEMS: IndividualRoom[] = [...INDIVIDUAL_ROOMS, ...INDIVIDUAL_SERVICES];
 
-export const DINING_OPTIONS = [
-    { id: 'breakfast', label: 'Desayuno', price: 8 },
-    { id: 'lunch', label: 'Comida', price: 16.5 },
-    { id: 'dinner', label: 'Cena', price: 11 },
-    { id: 'morningSnack', label: 'Tomar Mañana', price: 5.5 },
-    { id: 'afternoonSnack', label: 'Tomar Merienda', price: 5.5 }
-] as const; // Use const assertion for type safety
-
 const today = new Date();
 const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
@@ -219,11 +220,6 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     observations: 'Quiere una habitación tranquila.',
     checkIn: formatDate(new Date(today.getFullYear(), today.getMonth(), 2)), 
     checkOut: formatDate(new Date(today.getFullYear(), today.getMonth(), 5)),
-    dining: {
-      [formatDate(new Date(today.getFullYear(), today.getMonth(), 2))]: { breakfast: 4, lunch: 0, dinner: 4, morningSnack: 0, afternoonSnack: 0 },
-      [formatDate(new Date(today.getFullYear(), today.getMonth(), 3))]: { breakfast: 4, lunch: 4, dinner: 4, morningSnack: 0, afternoonSnack: 0 },
-      [formatDate(new Date(today.getFullYear(), today.getMonth(), 4))]: { breakfast: 4, lunch: 0, dinner: 0, morningSnack: 0, afternoonSnack: 0 },
-    }
   },
   { 
     id: 'res6', 
@@ -235,10 +231,6 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     observations: 'Quiere una habitación tranquila.',
     checkIn: formatDate(new Date(today.getFullYear(), today.getMonth(), 2)), 
     checkOut: formatDate(new Date(today.getFullYear(), today.getMonth(), 4)),
-    dining: {
-      [formatDate(new Date(today.getFullYear(), today.getMonth(), 2))]: { breakfast: 2, lunch: 2, dinner: 0, morningSnack: 0, afternoonSnack: 0 },
-      [formatDate(new Date(today.getFullYear(), today.getMonth(), 3))]: { breakfast: 2, lunch: 0, dinner: 2, morningSnack: 0, afternoonSnack: 0 },
-    }
   },
   { 
     id: 'res2', 
@@ -250,10 +242,6 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     observations: '',
     checkIn: formatDate(new Date(today.getFullYear(), today.getMonth(), 7)), 
     checkOut: formatDate(new Date(today.getFullYear(), today.getMonth(), 9)),
-    dining: {
-      [formatDate(new Date(today.getFullYear(), today.getMonth(), 7))]: { breakfast: 2, lunch: 2, dinner: 2, morningSnack: 2, afternoonSnack: 2 },
-      [formatDate(new Date(today.getFullYear(), today.getMonth(), 8))]: { breakfast: 2, lunch: 2, dinner: 2, morningSnack: 2, afternoonSnack: 2 },
-    },
     otherServices: {
         [formatDate(new Date(today.getFullYear(), today.getMonth(), 7))]: {
             'small_hall': [{ startTime: '10:00', endTime: '13:00' }],
@@ -325,12 +313,6 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     observations: '',
     checkIn: formatDate(new Date(today.getFullYear(), today.getMonth(), 18)), 
     checkOut: formatDate(new Date(today.getFullYear(), today.getMonth(), 22)),
-    dining: {
-        [formatDate(new Date(today.getFullYear(), today.getMonth(), 18))]: { breakfast: 3, lunch: 0, dinner: 0, morningSnack: 0, afternoonSnack: 0 },
-        [formatDate(new Date(today.getFullYear(), today.getMonth(), 19))]: { breakfast: 3, lunch: 0, dinner: 0, morningSnack: 0, afternoonSnack: 0 },
-        [formatDate(new Date(today.getFullYear(), today.getMonth(), 20))]: { breakfast: 3, lunch: 0, dinner: 0, morningSnack: 0, afternoonSnack: 0 },
-        [formatDate(new Date(today.getFullYear(), today.getMonth(), 21))]: { breakfast: 3, lunch: 0, dinner: 0, morningSnack: 0, afternoonSnack: 0 },
-    }
   },
   { 
     id: 'res5', 

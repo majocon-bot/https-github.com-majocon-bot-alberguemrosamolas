@@ -1,3 +1,4 @@
+
 export interface RoomType {
   id: string;
   name: string;
@@ -13,17 +14,18 @@ export interface RoomSelection {
   [roomId: string]: number;
 }
 
+export interface TimeSlot {
+  startTime: string;
+  endTime: string;
+}
+
+// FIX: Added DiningSelection interface for dining options.
 export interface DiningSelection {
   breakfast: number;
   lunch: number;
   dinner: number;
   morningSnack: number;
   afternoonSnack: number;
-}
-
-export interface TimeSlot {
-  startTime: string;
-  endTime: string;
 }
 
 export interface BookingDetails {
@@ -33,8 +35,9 @@ export interface BookingDetails {
   checkIn: string;
   checkOut: string;
   observations: string;
-  dining: { [date: string]: DiningSelection };
   otherServices: { [date: string]: { [serviceId: string]: TimeSlot[] } };
+  // FIX: Added optional dining property to track dining selections.
+  dining?: { [date: string]: DiningSelection };
   unitServices?: { [date: string]: { [serviceId: string]: number } };
 }
 
@@ -53,8 +56,9 @@ export interface Reservation {
   observations: string;
   checkIn: string; // YYYY-MM-DD
   checkOut: string; // YYYY-MM-DD
-  dining?: { [date: string]: DiningSelection };
   otherServices?: { [date: string]: { [serviceId: string]: TimeSlot[] } };
+  // FIX: Added optional dining property to store dining information with a reservation.
+  dining?: { [date: string]: DiningSelection };
   unitServices?: { [date: string]: { [serviceId: string]: number } };
 }
 
@@ -69,8 +73,9 @@ export interface GroupedReservation {
   minCheckIn: string;
   maxCheckOut: string;
   roomSummary: { [roomType: string]: number };
-  diningSummary: { [date: string]: DiningSelection };
   otherServicesSummary: { [date: string]: { [serviceId: string]: TimeSlot[] } };
+  // FIX: Added diningSummary to store aggregated dining info for a group.
+  diningSummary: { [date: string]: DiningSelection };
   unitServicesSummary?: { [date: string]: { [serviceId: string]: number } };
   totalGuests: number;
   reservations: Reservation[]; // Keep track of original reservations

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { GroupedReservationWithCost, TimeSlot, FiscalDetails } from '../types';
-import { ROOM_TYPES, SERVICE_TYPES, DINING_OPTIONS } from '../constants';
+import { ROOM_TYPES, SERVICE_TYPES } from '../constants';
 import { PrintIcon } from './icons/PrintIcon';
 import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
 
@@ -28,22 +28,6 @@ const InvoiceView: React.FC<InvoiceViewProps> = ({ group, onBack, fiscalDetails 
           total: roomType.price * nights * Number(count),
         };
       })
-      .filter(Boolean);
-
-    const diningItems = Object.entries(group.diningSummary)
-      .flatMap(([date, services]) =>
-        Object.entries(services)
-          .map(([serviceId, count]) => {
-            const option = DINING_OPTIONS.find(opt => opt.id === serviceId);
-            if (!option || Number(count) <= 0) return null;
-            return {
-              description: `${option.label} (${new Date(date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric', timeZone: 'UTC' })})`,
-              quantity: Number(count),
-              unitPrice: option.price,
-              total: option.price * Number(count),
-            };
-          })
-      )
       .filter(Boolean);
 
     const serviceItems = Object.entries(group.otherServicesSummary)
@@ -96,11 +80,11 @@ const InvoiceView: React.FC<InvoiceViewProps> = ({ group, onBack, fiscalDetails 
       .filter(Boolean);
 
 
-    const subtotal = [...accommodationItems, ...diningItems, ...serviceItems, ...unitServiceItems].reduce((sum, item) => sum + (item?.total || 0), 0);
+    const subtotal = [...accommodationItems, ...serviceItems, ...unitServiceItems].reduce((sum, item) => sum + (item?.total || 0), 0);
     const iva = subtotal * 0.21;
     const total = subtotal + iva;
 
-    return { accommodationItems, diningItems, serviceItems, unitServiceItems, subtotal, iva, total };
+    return { accommodationItems, serviceItems, unitServiceItems, subtotal, iva, total };
   }, [group]);
 
 
@@ -156,7 +140,7 @@ const InvoiceView: React.FC<InvoiceViewProps> = ({ group, onBack, fiscalDetails 
                         </tr>
                     </thead>
                     <tbody>
-                        {[...costDetails.accommodationItems, ...costDetails.diningItems, ...costDetails.serviceItems, ...costDetails.unitServiceItems].map((item, index) => item && (
+                        {[...costDetails.accommodationItems, ...costDetails.serviceItems, ...costDetails.unitServiceItems].map((item, index) => item && (
                             <tr key={index} className="border-b">
                                 <td className="p-3 text-slate-700">{item.description}</td>
                                 <td className="p-3 text-slate-700 text-right">{item.quantity}</td>

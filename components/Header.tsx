@@ -1,13 +1,12 @@
 import React from 'react';
 import { CalendarIcon } from './icons/CalendarIcon';
 import { ListIcon } from './icons/ListIcon';
-import { DiningIcon } from './icons/DiningIcon';
 import { ClipboardIcon } from './icons/ClipboardIcon';
 import { HomeIcon } from './icons/HomeIcon';
 import { BriefcaseIcon } from './icons/BriefcaseIcon';
 import { SettingsIcon } from './icons/SettingsIcon';
 
-type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'dining' | 'settings';
+type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'settings';
 
 interface HeaderProps {
   currentView: View;
@@ -65,14 +64,6 @@ const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
           >
             <BriefcaseIcon className="w-5 h-5" />
             <span className="hidden md:inline">Salas</span>
-          </button>
-          <button
-            onClick={() => setView('dining')}
-            className={`${baseClasses} ${currentView === 'dining' ? activeClasses : inactiveClasses}`}
-            aria-current={currentView === 'dining' ? 'page' : undefined}
-          >
-            <DiningIcon className="w-5 h-5" />
-            <span className="hidden md:inline">Comedor</span>
           </button>
           <button
             onClick={() => setView('settings')}

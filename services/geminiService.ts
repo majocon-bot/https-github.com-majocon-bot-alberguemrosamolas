@@ -1,6 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { FullBooking, RoomType } from "../types";
-import { DINING_OPTIONS } from "../constants";
 
 const generatePrompt = (booking: FullBooking, allItems: RoomType[], totalRooms: number, totalGuests: number): string => {
   const { details, roomSelection } = booking;
@@ -23,29 +22,6 @@ const generatePrompt = (booking: FullBooking, allItems: RoomType[], totalRooms: 
   
   prompt += `\nLos elementos seleccionados son: ${itemSummary}.`;
 
-
-  const diningSummary = Object.entries(booking.details.dining)
-    .map(([date, services]) => {
-      const dailyServices = Object.entries(services)
-        .filter(([, diners]) => diners > 0)
-        .map(([serviceId, diners]) => {
-          const serviceName = DINING_OPTIONS.find(opt => opt.id === serviceId)?.label || serviceId;
-          return `${diners} ${serviceName}`;
-        })
-        .join(', ');
-      
-      if (dailyServices) {
-          const formattedDate = new Date(date).toLocaleDateString('es-ES', { month: 'long', day: 'numeric', timeZone: 'UTC' });
-          return `El ${formattedDate}: ${dailyServices}.`;
-      }
-      return null;
-    })
-    .filter(Boolean)
-    .join('\n');
-
-  if (diningSummary) {
-    prompt += `\nTambién han solicitado los siguientes servicios de comedor:\n${diningSummary}`;
-  }
 
   if (details.observations) {
     prompt += `\nEl cliente ha dejado las siguientes observaciones: "${details.observations}". Ten esto en cuenta para el tono del mensaje.`;

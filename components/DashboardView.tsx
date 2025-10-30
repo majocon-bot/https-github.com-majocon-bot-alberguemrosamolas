@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import { Reservation, IndividualRoom, RoomType, DiningSelection, GroupedReservation } from '../types';
-import { DINING_OPTIONS } from '../constants';
+import { Reservation, IndividualRoom, RoomType, GroupedReservation } from '../types';
 import { UserIcon } from './icons/UserIcon';
 import { BedIcon } from './icons/BedIcon';
 import { PlusIcon } from './icons/PlusIcon';
@@ -66,25 +65,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({ reservations, rooms, room
     return Math.round((occupiedPhysicalRooms / totalPhysicalRooms) * 100);
   }, [occupiedRooms, rooms, roomTypes]);
 
-  const dailyDiningTotals = useMemo(() => {
-    const totals: DiningSelection = {
-      breakfast: 0, lunch: 0, dinner: 0, morningSnack: 0, afternoonSnack: 0,
-    };
-    reservations.forEach(res => {
-      if (res.checkIn <= todayStr && res.checkOut > todayStr) {
-        if (res.dining && res.dining[todayStr]) {
-          const dailyDining = res.dining[todayStr];
-          totals.breakfast += dailyDining.breakfast || 0;
-          totals.lunch += dailyDining.lunch || 0;
-          totals.dinner += dailyDining.dinner || 0;
-          totals.morningSnack += dailyDining.morningSnack || 0;
-          totals.afternoonSnack += dailyDining.afternoonSnack || 0;
-        }
-      }
-    });
-    return totals;
-  }, [reservations, todayStr]);
-
   const upcomingReservations = useMemo((): GroupedReservation[] => {
     const groups: { [key: string]: GroupedReservation } = reservations.reduce((acc, res) => {
       if (new Date(res.checkIn) < new Date(todayStr)) return acc;
@@ -94,7 +74,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ reservations, rooms, room
           guestName: res.guestName,
           minCheckIn: res.checkIn,
           maxCheckOut: res.checkOut,
-          roomSummary: {}, diningSummary: {}, otherServicesSummary: {}, totalGuests: 0, reservations: [],
+          roomSummary: {}, otherServicesSummary: {}, totalGuests: 0, reservations: [],
         };
       }
       
@@ -160,46 +140,30 @@ const DashboardView: React.FC<DashboardViewProps> = ({ reservations, rooms, room
             <StatCard title="Check-outs Hoy" value={checkOutsToday} subtext="Grupos que se van hoy" icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M14 17l5-5-5-5M19 12H9"/></svg>} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Upcoming Reservations */}
-            <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
-                <h2 className="text-2xl font-bold text-slate-800 mb-4">Próximas Reservas</h2>
-                {upcomingReservations.length > 0 ? (
-                    <ul className="divide-y divide-slate-200">
-                        {upcomingReservations.map(group => (
-                            <li key={group.guestName + group.minCheckIn} className="py-3 flex justify-between items-center">
-                                <div>
-                                    <p className="font-semibold text-indigo-700">{group.guestName}</p>
-                                    <p className="text-sm text-slate-500">
-                                        {new Date(group.minCheckIn).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', timeZone: 'UTC' })} &rarr; {new Date(group.maxCheckOut).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })}
-                                    </p>
-                                </div>
-                                { group.totalGuests > 0 &&
-                                <div className="flex items-center space-x-2 text-slate-600 font-bold bg-slate-100 px-3 py-1 rounded-full">
-                                    <UserIcon className="w-5 h-5"/>
-                                    <span>{group.totalGuests}</span>
-                                </div>
-                                }
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className="text-slate-500 text-center py-8">No hay próximas reservas.</p>
-                )}
-            </div>
-
-            {/* Dining Summary */}
-            <div className="bg-white p-6 rounded-xl shadow-lg">
-                <h2 className="text-2xl font-bold text-slate-800 mb-4">Comedor Hoy</h2>
-                 <div className="space-y-3">
-                    {DINING_OPTIONS.map(option => (
-                        <div key={option.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-md">
-                            <p className="font-semibold text-slate-600">{option.label}</p>
-                            <p className="text-xl font-bold text-indigo-600">{dailyDiningTotals[option.id]}</p>
-                        </div>
+        <div className="bg-white p-6 rounded-xl shadow-lg">
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">Próximas Reservas</h2>
+            {upcomingReservations.length > 0 ? (
+                <ul className="divide-y divide-slate-200">
+                    {upcomingReservations.map(group => (
+                        <li key={group.guestName + group.minCheckIn} className="py-3 flex justify-between items-center">
+                            <div>
+                                <p className="font-semibold text-indigo-700">{group.guestName}</p>
+                                <p className="text-sm text-slate-500">
+                                    {new Date(group.minCheckIn).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', timeZone: 'UTC' })} &rarr; {new Date(group.maxCheckOut).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })}
+                                </p>
+                            </div>
+                            { group.totalGuests > 0 &&
+                            <div className="flex items-center space-x-2 text-slate-600 font-bold bg-slate-100 px-3 py-1 rounded-full">
+                                <UserIcon className="w-5 h-5"/>
+                                <span>{group.totalGuests}</span>
+                            </div>
+                            }
+                        </li>
                     ))}
-                </div>
-            </div>
+                </ul>
+            ) : (
+                <p className="text-slate-500 text-center py-8">No hay próximas reservas.</p>
+            )}
         </div>
 
     </div>

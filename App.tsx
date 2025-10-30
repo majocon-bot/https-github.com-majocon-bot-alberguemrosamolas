@@ -1,23 +1,21 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { RoomSelection, BookingDetails, Reservation, GroupedReservation, GroupedReservationWithCost, TimeSlot, ServiceBooking, FiscalDetails } from './types';
-import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, MOCK_RESERVATIONS, DINING_OPTIONS } from './constants';
+import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, MOCK_RESERVATIONS } from './constants';
 import RoomTypeCard from './components/RoomTypeCard';
 import BookingSummary from './components/BookingSummary';
 import { generateBookingConfirmation } from './services/geminiService';
 import Header from './components/Header';
 import OccupancyCalendar from './components/OccupancyCalendar';
 import BookingDetailsForm from './components/BookingDetailsForm';
-import BookingDiningForm from './components/BookingDiningForm';
 import BookingOtherServicesForm from './components/BookingOtherServicesForm';
-import DiningHallView from './components/DiningHallView';
 import ReservationsListView from './components/ReservationsListView';
 import DashboardView from './components/DashboardView';
 import ServicesListView from './components/ServicesListView';
 import InvoiceView from './components/InvoiceView';
 import SettingsView from './components/SettingsView';
 
-type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'dining' | 'invoice' | 'settings';
-type BookingStep = 'options' | 'dining' | 'schedule' | 'loading' | 'confirmed';
+type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'invoice' | 'settings';
+type BookingStep = 'options' | 'schedule' | 'loading' | 'confirmed';
 
 const today = new Date();
 const tomorrow = new Date(today);
@@ -32,7 +30,6 @@ const initialDetails: BookingDetails = {
     checkIn: formatDate(today),
     checkOut: formatDate(tomorrow),
     observations: '',
-    dining: {},
     otherServices: {},
     unitServices: {},
 };
@@ -124,69 +121,32 @@ const App: React.FC = () => {
   
   const handleNextStep = () => {
       if (bookingStep === 'options') {
-          if (totalRooms > 0) {
-              const stayDates = getDatesInRange(bookingDetails.checkIn, bookingDetails.checkOut);
-              const newDining = { ...bookingDetails.dining };
-              for (const date of stayDates) {
-                const daySelection = newDining[date] || { breakfast: 0, lunch: 0, dinner: 0, morningSnack: 0, afternoonSnack: 0 };
-                if (totalGuests > 0) daySelection.breakfast = totalGuests;
-                newDining[date] = daySelection;
-              }
-              setBookingDetails(prev => ({ ...prev, dining: newDining }));
-              setBookingStep('dining');
-          } else if (totalServices > 0) {
-              const stayDates = getDatesInRange(bookingDetails.checkIn, bookingDetails.checkOut);
-              const newOtherServices = { ...(bookingDetails.otherServices || {}) };
-              const newUnitServices = { ...(bookingDetails.unitServices || {}) };
-              const selectedTimeServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id && s.priceUnit !== 'one_time') && (roomSelection[id] || 0) > 0);
-              const selectedUnitServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id && s.priceUnit === 'one_time') && (roomSelection[id] || 0) > 0);
-              
-              for (const date of stayDates) {
-                  if (!newOtherServices[date]) newOtherServices[date] = {};
-                  for(const serviceId of selectedTimeServices) {
-                      if (!newOtherServices[date][serviceId]) newOtherServices[date][serviceId] = [];
-                  }
-                  if (!newUnitServices[date]) newUnitServices[date] = {};
-                  for(const serviceId of selectedUnitServices) {
-                      if (newUnitServices[date][serviceId] === undefined) newUnitServices[date][serviceId] = 0;
-                  }
-              }
-              setBookingDetails(prev => ({ ...prev, otherServices: newOtherServices, unitServices: newUnitServices }));
-              setBookingStep('schedule');
-          }
-      } else if (bookingStep === 'dining') {
-          if (totalServices > 0) {
-              const stayDates = getDatesInRange(bookingDetails.checkIn, bookingDetails.checkOut);
-              const newOtherServices = { ...(bookingDetails.otherServices || {}) };
-              const newUnitServices = { ...(bookingDetails.unitServices || {}) };
-              const selectedTimeServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id && s.priceUnit !== 'one_time') && (roomSelection[id] || 0) > 0);
-              const selectedUnitServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id && s.priceUnit === 'one_time') && (roomSelection[id] || 0) > 0);
-
-              for (const date of stayDates) {
-                  if (!newOtherServices[date]) newOtherServices[date] = {};
-                  for(const serviceId of selectedTimeServices) {
-                      if (!newOtherServices[date][serviceId]) newOtherServices[date][serviceId] = [];
-                  }
-                  if (!newUnitServices[date]) newUnitServices[date] = {};
-                  for(const serviceId of selectedUnitServices) {
-                      if (newUnitServices[date][serviceId] === undefined) newUnitServices[date][serviceId] = 0;
-                  }
-              }
-              setBookingDetails(prev => ({ ...prev, otherServices: newOtherServices, unitServices: newUnitServices }));
-              setBookingStep('schedule');
-          }
+        if (totalServices > 0) {
+            const stayDates = getDatesInRange(bookingDetails.checkIn, bookingDetails.checkOut);
+            const newOtherServices = { ...(bookingDetails.otherServices || {}) };
+            const newUnitServices = { ...(bookingDetails.unitServices || {}) };
+            const selectedTimeServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id && s.priceUnit !== 'one_time') && (roomSelection[id] || 0) > 0);
+            const selectedUnitServices = Object.keys(roomSelection).filter(id => SERVICE_TYPES.some(s => s.id === id && s.priceUnit === 'one_time') && (roomSelection[id] || 0) > 0);
+            
+            for (const date of stayDates) {
+                if (!newOtherServices[date]) newOtherServices[date] = {};
+                for(const serviceId of selectedTimeServices) {
+                    if (!newOtherServices[date][serviceId]) newOtherServices[date][serviceId] = [];
+                }
+                if (!newUnitServices[date]) newUnitServices[date] = {};
+                for(const serviceId of selectedUnitServices) {
+                    if (newUnitServices[date][serviceId] === undefined) newUnitServices[date][serviceId] = 0;
+                }
+            }
+            setBookingDetails(prev => ({ ...prev, otherServices: newOtherServices, unitServices: newUnitServices }));
+            setBookingStep('schedule');
+        }
       }
   };
 
   const handlePrevStep = () => {
-      if (bookingStep === 'dining') {
+      if (bookingStep === 'schedule') {
           setBookingStep('options');
-      } else if (bookingStep === 'schedule') {
-          if (totalRooms > 0) {
-              setBookingStep('dining');
-          } else {
-              setBookingStep('options');
-          }
       }
   };
 
@@ -229,7 +189,6 @@ const App: React.FC = () => {
           observations: bookingDetails.observations,
           checkIn: bookingDetails.checkIn,
           checkOut: bookingDetails.checkOut,
-          dining: bookingDetails.dining,
           otherServices: bookingDetails.otherServices,
           unitServices: bookingDetails.unitServices,
         });
@@ -283,7 +242,6 @@ const App: React.FC = () => {
         checkIn: group.minCheckIn,
         checkOut: group.maxCheckOut,
         observations: firstRes.observations,
-        dining: group.diningSummary,
         otherServices: group.otherServicesSummary,
         unitServices: group.unitServicesSummary,
       });
@@ -312,7 +270,6 @@ const App: React.FC = () => {
         minCheckIn,
         maxCheckOut,
         roomSummary,
-        diningSummary: firstRes.dining || {},
         otherServicesSummary: firstRes.otherServices || {},
         totalGuests: 0, 
         reservations: guestReservations,
@@ -431,10 +388,8 @@ const App: React.FC = () => {
     switch (bookingStep) {
         case 'options':
             return 'Paso 1: Elige fechas, responsable, alojamiento y salas';
-        case 'dining':
-            return 'Paso 2: Configura los servicios de comedor';
         case 'schedule':
-            return 'Paso 3: Define los horarios de las salas y servicios';
+            return 'Paso 2: Define los horarios de las salas y servicios';
         default:
             return '';
     }
@@ -458,7 +413,6 @@ const App: React.FC = () => {
     const serviceItems = selectedItemsSummary.filter(item => item.isService);
     const totalServices = serviceItems.reduce((sum, item) => sum + item.count, 0);
 
-    const diningDates = Object.keys(bookingDetails.dining).sort();
     const otherServicesDates = Object.keys(bookingDetails.otherServices || {}).sort();
 
     return (
@@ -528,33 +482,6 @@ const App: React.FC = () => {
                                     {(slots as TimeSlot[]).map((slot, i) => ` ${slot.startTime}-${slot.endTime}`).join(', ')}
                                 </li>
                             )
-                        })}
-                        </ul>
-                    </div>
-                    );
-                })}
-                </div>
-                </>
-            )}
-
-             {diningDates.length > 0 && (
-                <>
-                <h4 className="text-lg font-bold text-slate-700 mt-4 mb-2">Servicios de Comedor:</h4>
-                <div className="max-h-40 overflow-y-auto space-y-3 bg-slate-50 p-3 rounded-md">
-                {diningDates.map(date => {
-                    const services = Object.entries(bookingDetails.dining[date])
-                        .filter(([, diners]) => (diners as number) > 0);
-                    if (services.length === 0) return null;
-                    
-                    return (
-                    <div key={date}>
-                        <p className="font-semibold text-slate-600 text-sm">
-                        {new Date(date).toLocaleDateString('es-ES', { weekday: 'short', month: 'long', day: 'numeric', timeZone: 'UTC' })}
-                        </p>
-                        <ul className="text-sm list-disc list-inside ml-2">
-                        {services.map(([service, diners]) => {
-                            const serviceLabel = DINING_OPTIONS.find(opt => opt.id === service)?.label || service;
-                            return <li key={service}>{serviceLabel}: {diners} comensales</li>
                         })}
                         </ul>
                     </div>
@@ -665,9 +592,6 @@ const App: React.FC = () => {
                     </div>
                    </>
                 )}
-                {bookingStep === 'dining' && (
-                  <BookingDiningForm details={bookingDetails} setDetails={setBookingDetails} totalGuests={totalGuests} />
-                )}
                 {bookingStep === 'schedule' && (
                     <BookingOtherServicesForm details={bookingDetails} setDetails={setBookingDetails} roomSelection={roomSelection} />
                 )}
@@ -688,32 +612,24 @@ const App: React.FC = () => {
                 />
                 
                 {bookingStep === 'options' && (
-                  <button
-                    onClick={handleNextStep}
-                    disabled={totalItems === 0 || !bookingDetails.name || !bookingDetails.dni || !bookingDetails.phone}
-                    className="w-full mt-8 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-                  >
-                    Continuar
-                  </button>
+                    totalServices > 0 ? (
+                        <button
+                            onClick={handleNextStep}
+                            disabled={totalItems === 0 || !bookingDetails.name || !bookingDetails.dni || !bookingDetails.phone}
+                            className="w-full mt-8 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                        >
+                            Continuar
+                        </button>
+                    ) : (
+                         <button
+                            onClick={handleSaveBooking}
+                            disabled={totalItems === 0 || !bookingDetails.name || !bookingDetails.dni || !bookingDetails.phone}
+                            className="w-full mt-8 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                        >
+                           {isEditing ? 'Guardar Cambios' : 'Confirmar Reserva'}
+                        </button>
+                    )
                 )}
-
-                 {bookingStep === 'dining' && (
-                  <div className="mt-8 flex space-x-4">
-                    <button
-                      onClick={handlePrevStep}
-                      className="w-1/2 bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-lg text-lg hover:bg-slate-300 transition-all duration-300 shadow-md"
-                    >
-                      Atrás
-                    </button>
-                    <button
-                      onClick={totalServices > 0 ? handleNextStep : handleSaveBooking}
-                      disabled={!bookingDetails.name || !bookingDetails.dni || !bookingDetails.phone}
-                      className="w-1/2 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md"
-                    >
-                     {totalServices > 0 ? 'Continuar' : (isEditing ? 'Guardar Cambios' : 'Confirmar')}
-                    </button>
-                  </div>
-                 )}
 
                  {bookingStep === 'schedule' && (
                   <div className="mt-8 flex space-x-4">
@@ -770,9 +686,6 @@ const App: React.FC = () => {
                 setView('booking');
             }}
            />
-        )}
-        {view === 'dining' && (
-           <DiningHallView reservations={reservations} />
         )}
         {view === 'settings' && (
             <SettingsView 
