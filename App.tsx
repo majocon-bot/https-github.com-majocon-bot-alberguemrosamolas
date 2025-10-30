@@ -1,6 +1,8 @@
+
+
 import React, { useState, useMemo, useEffect } from 'react';
-import { RoomSelection, BookingDetails, Reservation, GroupedReservation, GroupedReservationWithCost, TimeSlot, ServiceBooking, FiscalDetails } from './types';
-import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, MOCK_RESERVATIONS } from './constants';
+import { RoomSelection, BookingDetails, Reservation, GroupedReservation, GroupedReservationWithCost, TimeSlot, ServiceBooking, FiscalDetails, DiningSelection } from './types';
+import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, MOCK_RESERVATIONS, ALL_ROOMS_DATA, DINING_OPTIONS } from './constants';
 import RoomTypeCard from './components/RoomTypeCard';
 import BookingSummary from './components/BookingSummary';
 import { generateBookingConfirmation } from './services/geminiService';
@@ -13,9 +15,12 @@ import DashboardView from './components/DashboardView';
 import ServicesListView from './components/ServicesListView';
 import InvoiceView from './components/InvoiceView';
 import SettingsView from './components/SettingsView';
+import RoomStatusView from './components/RoomStatusView';
+import BookingDiningForm from './components/BookingDiningForm';
+import DiningHallView from './components/DiningHallView';
 
-type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'invoice' | 'settings';
-type BookingStep = 'options' | 'schedule' | 'loading' | 'confirmed';
+type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'invoice' | 'settings' | 'room_status' | 'dining_hall';
+type BookingStep = 'options' | 'dining' | 'schedule' | 'loading' | 'confirmed';
 
 const today = new Date();
 const tomorrow = new Date(today);
@@ -32,6 +37,7 @@ const initialDetails: BookingDetails = {
     observations: '',
     otherServices: {},
     unitServices: {},
+    dining: {},
 };
 
 const initialFiscalDetails: FiscalDetails = {
@@ -121,7 +127,15 @@ const App: React.FC = () => {
   
   const handleNextStep = () => {
       if (bookingStep === 'options') {
-        if (totalServices > 0) {
+          if (totalGuests > 0) {
+            setBookingStep('dining');
+          } else if (totalServices > 0) {
+            setBookingStep('schedule');
+          } else {
+            handleSaveBooking();
+          }
+      } else if (bookingStep === 'dining') {
+          if (totalServices > 0) {
             const stayDates = getDatesInRange(bookingDetails.checkIn, bookingDetails.checkOut);
             const newOtherServices = { ...(bookingDetails.otherServices || {}) };
             const newUnitServices = { ...(bookingDetails.unitServices || {}) };
@@ -140,13 +154,21 @@ const App: React.FC = () => {
             }
             setBookingDetails(prev => ({ ...prev, otherServices: newOtherServices, unitServices: newUnitServices }));
             setBookingStep('schedule');
+        } else {
+            handleSaveBooking();
         }
       }
   };
 
   const handlePrevStep = () => {
       if (bookingStep === 'schedule') {
-          setBookingStep('options');
+          if (totalGuests > 0) {
+            setBookingStep('dining');
+          } else {
+            setBookingStep('options');
+          }
+      } else if (bookingStep === 'dining') {
+        setBookingStep('options');
       }
   };
 
@@ -191,6 +213,7 @@ const App: React.FC = () => {
           checkOut: bookingDetails.checkOut,
           otherServices: bookingDetails.otherServices,
           unitServices: bookingDetails.unitServices,
+          dining: bookingDetails.dining,
         });
       });
     }
@@ -244,6 +267,7 @@ const App: React.FC = () => {
         observations: firstRes.observations,
         otherServices: group.otherServicesSummary,
         unitServices: group.unitServicesSummary,
+        dining: group.diningSummary,
       });
     }
 
@@ -271,6 +295,9 @@ const App: React.FC = () => {
         maxCheckOut,
         roomSummary,
         otherServicesSummary: firstRes.otherServices || {},
+        // FIX: Added missing diningSummary and unitServicesSummary properties to conform to GroupedReservation type.
+        diningSummary: firstRes.dining || {},
+        unitServicesSummary: firstRes.unitServices || {},
         totalGuests: 0, 
         reservations: guestReservations,
     };
@@ -387,9 +414,11 @@ const App: React.FC = () => {
   const getStepDescription = () => {
     switch (bookingStep) {
         case 'options':
-            return 'Paso 1: Elige fechas, responsable, alojamiento y salas';
+            return 'Paso 1: Elige fechas, responsable y alojamiento';
+        case 'dining':
+            return 'Paso 2: Selecciona los servicios de comedor';
         case 'schedule':
-            return 'Paso 2: Define los horarios de las salas y servicios';
+            return 'Paso 3: Define los horarios de las salas y servicios';
         default:
             return '';
     }
@@ -414,6 +443,8 @@ const App: React.FC = () => {
     const totalServices = serviceItems.reduce((sum, item) => sum + item.count, 0);
 
     const otherServicesDates = Object.keys(bookingDetails.otherServices || {}).sort();
+    const diningDates = Object.keys(bookingDetails.dining || {}).sort();
+
 
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
@@ -460,11 +491,41 @@ const App: React.FC = () => {
                 </>
              )}
 
+            {diningDates.length > 0 && (
+                 <>
+                    <h4 className="text-lg font-bold text-slate-700 mt-4 mb-2">Servicios de Comedor:</h4>
+                    <div className="max-h-40 overflow-y-auto space-y-3 bg-slate-50 p-3 rounded-md">
+                    {diningDates.map(date => {
+                        const diningDay = bookingDetails.dining?.[date];
+                        if (!diningDay) return null;
+                        // FIX: Explicitly cast `count` to a number before comparison to resolve a TypeScript type error where `count` was inferred as `unknown`.
+                        const services = Object.entries(diningDay).filter(([, count]) => Number(count) > 0);
+                        if(services.length === 0) return null;
+
+                        return (
+                            <div key={date}>
+                                <p className="font-semibold text-slate-600 text-sm">
+                                    {new Date(date).toLocaleDateString('es-ES', { weekday: 'short', month: 'long', day: 'numeric', timeZone: 'UTC' })}
+                                </p>
+                                <ul className="text-sm list-disc list-inside ml-2">
+                                {services.map(([serviceId, count]) => {
+                                    const serviceLabel = DINING_OPTIONS.find(opt => opt.id === serviceId)?.label || serviceId;
+                                    return <li key={serviceId}>{serviceLabel}: {count} comensales</li>
+                                })}
+                                </ul>
+                            </div>
+                        )
+                    })}
+                    </div>
+                 </>
+            )}
+
             {otherServicesDates.length > 0 && (
                 <>
                 <h4 className="text-lg font-bold text-slate-700 mt-4 mb-2">Uso de Salas y Servicios:</h4>
                 <div className="max-h-40 overflow-y-auto space-y-3 bg-slate-50 p-3 rounded-md">
                 {otherServicesDates.map(date => {
+                    if (!bookingDetails.otherServices) return null;
                     const services = Object.entries(bookingDetails.otherServices[date])
                         .filter(([, slots]) => (slots as TimeSlot[]).length > 0);
                     if (services.length === 0) return null;
@@ -592,6 +653,9 @@ const App: React.FC = () => {
                     </div>
                    </>
                 )}
+                {bookingStep === 'dining' && (
+                    <BookingDiningForm details={bookingDetails} setDetails={setBookingDetails} totalGuests={totalGuests} />
+                )}
                 {bookingStep === 'schedule' && (
                     <BookingOtherServicesForm details={bookingDetails} setDetails={setBookingDetails} roomSelection={roomSelection} />
                 )}
@@ -611,24 +675,14 @@ const App: React.FC = () => {
                   totalGuests={totalGuests}
                 />
                 
-                {bookingStep === 'options' && (
-                    totalServices > 0 ? (
-                        <button
-                            onClick={handleNextStep}
-                            disabled={totalItems === 0 || !bookingDetails.name || !bookingDetails.dni || !bookingDetails.phone}
-                            className="w-full mt-8 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-                        >
-                            Continuar
-                        </button>
-                    ) : (
-                         <button
-                            onClick={handleSaveBooking}
-                            disabled={totalItems === 0 || !bookingDetails.name || !bookingDetails.dni || !bookingDetails.phone}
-                            className="w-full mt-8 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-                        >
-                           {isEditing ? 'Guardar Cambios' : 'Confirmar Reserva'}
-                        </button>
-                    )
+                {(bookingStep === 'options' || bookingStep === 'dining') && (
+                    <button
+                        onClick={handleNextStep}
+                        disabled={totalItems === 0 || !bookingDetails.name || !bookingDetails.dni || !bookingDetails.phone}
+                        className="w-full mt-8 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-lg hover:bg-indigo-700 transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                    >
+                        { bookingStep === 'options' && (totalGuests > 0 || totalServices > 0) ? 'Continuar' : (isEditing ? 'Guardar Cambios' : 'Confirmar Reserva')}
+                    </button>
                 )}
 
                  {bookingStep === 'schedule' && (
@@ -649,6 +703,15 @@ const App: React.FC = () => {
                   </div>
                  )}
 
+                {bookingStep !== 'options' && bookingStep !== 'loading' && (
+                     <button
+                        onClick={handlePrevStep}
+                        className="w-full mt-4 bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg text-sm hover:bg-slate-300 transition-all duration-300 shadow-md"
+                    >
+                        Atrás
+                    </button>
+                )}
+
                  {isEditing && bookingStep !== 'loading' && (
                     <button
                         onClick={() => {
@@ -668,6 +731,9 @@ const App: React.FC = () => {
         {view === 'calendar' && (
            <OccupancyCalendar rooms={ALL_INDIVIDUAL_ITEMS} reservations={reservations} />
         )}
+        {view === 'room_status' && (
+            <RoomStatusView reservations={reservations} allRooms={ALL_ROOMS_DATA} roomTypes={ROOM_TYPES} />
+        )}
         {view === 'reservations' && (
            <ReservationsListView 
               reservations={reservations} 
@@ -686,6 +752,9 @@ const App: React.FC = () => {
                 setView('booking');
             }}
            />
+        )}
+        {view === 'dining_hall' && (
+            <DiningHallView reservations={reservations} />
         )}
         {view === 'settings' && (
             <SettingsView 

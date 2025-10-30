@@ -5,8 +5,9 @@ import { ClipboardIcon } from './icons/ClipboardIcon';
 import { HomeIcon } from './icons/HomeIcon';
 import { BriefcaseIcon } from './icons/BriefcaseIcon';
 import { SettingsIcon } from './icons/SettingsIcon';
+import { ClipboardCheckIcon } from './icons/ClipboardCheckIcon';
 
-type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'settings';
+type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'settings' | 'room_status';
 
 interface HeaderProps {
   currentView: View;
@@ -40,6 +41,14 @@ const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
           >
             <ListIcon className="w-5 h-5" />
             <span className="hidden md:inline">Hacer Reserva</span>
+          </button>
+           <button
+            onClick={() => setView('room_status')}
+            className={`${baseClasses} ${currentView === 'room_status' ? activeClasses : inactiveClasses}`}
+            aria-current={currentView === 'room_status' ? 'page' : undefined}
+          >
+            <ClipboardCheckIcon className="w-5 h-5" />
+            <span className="hidden md:inline">Estado</span>
           </button>
           <button
             onClick={() => setView('calendar')}

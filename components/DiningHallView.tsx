@@ -113,7 +113,7 @@ const DiningHallView: React.FC<DiningHallViewProps> = ({ reservations }) => {
     // The new logic correctly finds a representative reservation for each guest group once.
     // FIX: The return type of `reduce` is inferred from its initial value. By casting the initial
     // empty object to the correct type, we ensure `reservationsByGuest` is correctly typed.
-    const reservationsByGuest = reservations.reduce(
+    const reservationsByGuest: Record<string, Reservation[]> = reservations.reduce(
       (acc, res) => {
         // Group all reservations by guest name
         (acc[res.guestName] = acc[res.guestName] || []).push(res);

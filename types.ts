@@ -8,6 +8,7 @@ export interface RoomType {
   image: string;
   price?: number;
   priceUnit?: 'per_day' | 'per_hour' | 'one_time';
+  bedConfiguration?: string;
 }
 
 export interface RoomSelection {
