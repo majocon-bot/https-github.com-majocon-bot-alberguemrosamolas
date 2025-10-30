@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { IndividualRoom, Reservation, IndividualReservation } from '../types';
+import { PrintIcon } from './icons/PrintIcon';
 
 interface OccupancyCalendarProps {
   rooms: IndividualRoom[];
@@ -71,16 +72,37 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
     );
   };
   
+  const handlePrint = () => {
+    const printableElement = document.getElementById('occupancy-calendar-printable-area');
+    if (printableElement) {
+        printableElement.classList.add('printable-area');
+        window.print();
+        // Delay removal to allow print dialog to process
+        setTimeout(() => {
+            printableElement.classList.remove('printable-area');
+        }, 500);
+    }
+  };
+
   const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg">
+    <div id="occupancy-calendar-printable-area" className="bg-white p-6 rounded-xl shadow-lg">
       <div className="flex justify-between items-center mb-6">
-        <button onClick={goToPreviousMonth} className="px-4 py-2 bg-slate-200 rounded-lg hover:bg-slate-300">&lt;</button>
-        <h2 className="text-2xl font-bold text-slate-800">
+        <div className="flex items-center space-x-2 no-print">
+            <button onClick={goToPreviousMonth} className="px-4 py-2 bg-slate-200 rounded-lg hover:bg-slate-300">&lt;</button>
+            <button onClick={goToNextMonth} className="px-4 py-2 bg-slate-200 rounded-lg hover:bg-slate-300">&gt;</button>
+        </div>
+        <h2 className="text-2xl font-bold text-slate-800 text-center">
           {new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(currentDate)}
         </h2>
-        <button onClick={goToNextMonth} className="px-4 py-2 bg-slate-200 rounded-lg hover:bg-slate-300">&gt;</button>
+        <button 
+            onClick={handlePrint}
+            className="flex items-center space-x-2 bg-slate-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-700 transition-all duration-300 shadow-md no-print"
+        >
+            <PrintIcon className="w-5 h-5"/>
+            <span className="hidden sm:inline">Imprimir</span>
+        </button>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-center">
