@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Reservation, RoomType } from '../types';
+import { Reservation, RoomType, IndividualReservation } from '../types';
 import { UserIcon } from './icons/UserIcon';
 import { BedIcon } from './icons/BedIcon';
 import { MapPinIcon } from './icons/MapPinIcon';
@@ -13,6 +13,7 @@ interface RoomData {
 
 interface RoomStatusViewProps {
   reservations: Reservation[];
+  individualReservations: IndividualReservation[];
   allRooms: RoomData[];
   roomTypes: RoomType[];
 }
@@ -31,7 +32,7 @@ const getRoomTypeHeaderStyles = (type: string): string => {
     }
 };
 
-const RoomStatusView: React.FC<RoomStatusViewProps> = ({ reservations, allRooms, roomTypes }) => {
+const RoomStatusView: React.FC<RoomStatusViewProps> = ({ reservations, individualReservations, allRooms, roomTypes }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,6 +41,30 @@ const RoomStatusView: React.FC<RoomStatusViewProps> = ({ reservations, allRooms,
       setSelectedDate(new Date(value + 'T00:00:00'));
     }
   };
+  
+  const allBookings = useMemo(() => {
+    const combined: { roomId: string, guestName: string, checkIn: string, checkOut: string}[] = reservations.map(r => ({
+      roomId: r.roomId,
+      guestName: r.groupName || r.guestName,
+      checkIn: r.checkIn,
+      checkOut: r.checkOut,
+    }));
+    
+    individualReservations.forEach(ir => {
+      const roomType = allRooms.find(r => r.number === Number(ir.contractDetails.roomNumber))?.type;
+      if (roomType) {
+        combined.push({
+          roomId: `${roomType}_${ir.contractDetails.roomNumber}`,
+          guestName: `${ir.guestPersonalDetails.firstSurname}, ${ir.guestPersonalDetails.name}`,
+          checkIn: ir.contractDetails.checkInDate,
+          checkOut: ir.contractDetails.checkOutDate,
+        });
+      }
+    });
+
+    return combined;
+  }, [reservations, individualReservations, allRooms]);
+
 
   const roomStatuses = useMemo(() => {
     const selectedDateStr = formatDate(selectedDate);
@@ -48,7 +73,7 @@ const RoomStatusView: React.FC<RoomStatusViewProps> = ({ reservations, allRooms,
         .filter(room => roomTypes.some(rt => rt.id === room.type))
         .map(room => {
             const roomTypeDetails = roomTypes.find(rt => rt.id === room.type);
-            const booking = reservations.find(res => 
+            const booking = allBookings.find(res => 
                 res.roomId === `${room.type}_${room.number}` &&
                 selectedDateStr >= res.checkIn &&
                 selectedDateStr < res.checkOut
@@ -63,7 +88,7 @@ const RoomStatusView: React.FC<RoomStatusViewProps> = ({ reservations, allRooms,
         })
         .sort((a, b) => a.number - b.number);
 
-  }, [selectedDate, reservations, allRooms, roomTypes]);
+  }, [selectedDate, allBookings, allRooms, roomTypes]);
 
   return (
     <div className="space-y-8 animate-fade-in-up">

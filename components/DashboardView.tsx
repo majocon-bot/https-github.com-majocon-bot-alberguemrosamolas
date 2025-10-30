@@ -3,17 +3,23 @@ import { Reservation, IndividualRoom, RoomType, GroupedReservation } from '../ty
 import { UserIcon } from './icons/UserIcon';
 import { BedIcon } from './icons/BedIcon';
 import { PlusIcon } from './icons/PlusIcon';
+import { CalendarIcon } from './icons/CalendarIcon';
+import { ClipboardIcon } from './icons/ClipboardIcon';
+import { UserPlusIcon } from './icons/UserPlusIcon';
+
+type View = 'dashboard' | 'booking' | 'individual_reservation' | 'calendar' | 'reservations' | 'services' | 'invoice' | 'settings' | 'room_status' | 'dining_hall';
 
 interface DashboardViewProps {
   reservations: Reservation[];
   rooms: IndividualRoom[];
   roomTypes: RoomType[];
   onNewBooking: () => void;
+  setView: (view: View) => void;
 }
 
 const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
-const DashboardView: React.FC<DashboardViewProps> = ({ reservations, rooms, roomTypes, onNewBooking }) => {
+const DashboardView: React.FC<DashboardViewProps> = ({ reservations, rooms, roomTypes, onNewBooking, setView }) => {
   const todayStr = useMemo(() => formatDate(new Date()), []);
 
   const {
@@ -113,6 +119,15 @@ const DashboardView: React.FC<DashboardViewProps> = ({ reservations, rooms, room
           </div>
       </div>
   );
+  
+  const ActionButton: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; }> = ({ icon, label, onClick }) => (
+    <button onClick={onClick} className="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-lg hover:shadow-xl hover:bg-indigo-50 transition-all duration-300 space-y-2">
+        <div className="bg-indigo-100 text-indigo-600 p-3 rounded-full">
+            {icon}
+        </div>
+        <span className="font-semibold text-slate-700 text-center">{label}</span>
+    </button>
+  );
 
   return (
     <div className="space-y-8 animate-fade-in-up">
@@ -140,30 +155,41 @@ const DashboardView: React.FC<DashboardViewProps> = ({ reservations, rooms, room
             <StatCard title="Check-outs Hoy" value={checkOutsToday} subtext="Grupos que se van hoy" icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M14 17l5-5-5-5M19 12H9"/></svg>} />
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h2 className="text-2xl font-bold text-slate-800 mb-4">Próximas Reservas</h2>
-            {upcomingReservations.length > 0 ? (
-                <ul className="divide-y divide-slate-200">
-                    {upcomingReservations.map(group => (
-                        <li key={group.guestName + group.minCheckIn} className="py-3 flex justify-between items-center">
-                            <div>
-                                <p className="font-semibold text-indigo-700">{group.guestName}</p>
-                                <p className="text-sm text-slate-500">
-                                    {new Date(group.minCheckIn).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', timeZone: 'UTC' })} &rarr; {new Date(group.maxCheckOut).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })}
-                                </p>
-                            </div>
-                            { group.totalGuests > 0 &&
-                            <div className="flex items-center space-x-2 text-slate-600 font-bold bg-slate-100 px-3 py-1 rounded-full">
-                                <UserIcon className="w-5 h-5"/>
-                                <span>{group.totalGuests}</span>
-                            </div>
-                            }
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <p className="text-slate-500 text-center py-8">No hay próximas reservas.</p>
-            )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                <h2 className="text-2xl font-bold text-slate-800 mb-4">Próximas Reservas</h2>
+                {upcomingReservations.length > 0 ? (
+                    <ul className="divide-y divide-slate-200">
+                        {upcomingReservations.map(group => (
+                            <li key={group.guestName + group.minCheckIn} className="py-3 flex justify-between items-center">
+                                <div>
+                                    <p className="font-semibold text-indigo-700">{group.guestName}</p>
+                                    <p className="text-sm text-slate-500">
+                                        {new Date(group.minCheckIn).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', timeZone: 'UTC' })} &rarr; {new Date(group.maxCheckOut).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })}
+                                    </p>
+                                </div>
+                                { group.totalGuests > 0 &&
+                                <div className="flex items-center space-x-2 text-slate-600 font-bold bg-slate-100 px-3 py-1 rounded-full">
+                                    <UserIcon className="w-5 h-5"/>
+                                    <span>{group.totalGuests}</span>
+                                </div>
+                                }
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-slate-500 text-center py-8">No hay próximas reservas.</p>
+                )}
+            </div>
+            <div className="space-y-4">
+                 <h2 className="text-2xl font-bold text-slate-800 text-center lg:text-left">Acciones Rápidas</h2>
+                 <div className="grid grid-cols-2 gap-4">
+                    <ActionButton icon={<PlusIcon className="w-6 h-6" />} label="Reserva Grupal" onClick={onNewBooking} />
+                    <ActionButton icon={<UserPlusIcon className="w-6 h-6" />} label="Reserva Individual" onClick={() => setView('individual_reservation')} />
+                    <ActionButton icon={<CalendarIcon className="w-6 h-6" />} label="Calendario" onClick={() => setView('calendar')} />
+                    <ActionButton icon={<ClipboardIcon className="w-6 h-6" />} label="Reservas" onClick={() => setView('reservations')} />
+                 </div>
+            </div>
         </div>
 
     </div>

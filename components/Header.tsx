@@ -7,9 +7,8 @@ import { BriefcaseIcon } from './icons/BriefcaseIcon';
 import { SettingsIcon } from './icons/SettingsIcon';
 import { ClipboardCheckIcon } from './icons/ClipboardCheckIcon';
 import { UserPlusIcon } from './icons/UserPlusIcon';
-import { DiningIcon } from './icons/DiningIcon';
 
-type View = 'dashboard' | 'booking' | 'individual_reservation' | 'calendar' | 'reservations' | 'services' | 'settings' | 'room_status' | 'dining_hall';
+type View = 'dashboard' | 'booking' | 'individual_reservation' | 'calendar' | 'reservations' | 'services' | 'settings' | 'room_status';
 
 interface HeaderProps {
   currentView: View;
@@ -83,14 +82,6 @@ const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
           >
             <BriefcaseIcon className="w-5 h-5" />
             <span className="hidden md:inline">Salas</span>
-          </button>
-          <button
-            onClick={() => setView('dining_hall')}
-            className={`${baseClasses} ${currentView === 'dining_hall' ? activeClasses : inactiveClasses}`}
-            aria-current={currentView === 'dining_hall' ? 'page' : undefined}
-          >
-            <DiningIcon className="w-5 h-5" />
-            <span className="hidden md:inline">Comedor</span>
           </button>
           <button
             onClick={() => setView('settings')}

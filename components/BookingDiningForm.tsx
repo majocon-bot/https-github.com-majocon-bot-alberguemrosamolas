@@ -41,7 +41,8 @@ const BookingDiningForm: React.FC<BookingDiningFormProps> = ({ details, setDetai
     const handleDiningChange = (date: string, optionId: keyof DiningSelection, value: number) => {
         const diners = Math.max(0, Math.min(value, totalGuests)); // Clamp value between 0 and totalGuests
         setDetails(prev => {
-            const newDining = { ...prev.dining };
+            // FIX: Handle case where prev.dining might be undefined.
+            const newDining = { ...(prev.dining || {}) };
             const daySelection = newDining[date] || { ...defaultDiningSelection };
             daySelection[optionId] = diners;
             newDining[date] = daySelection;
@@ -82,7 +83,8 @@ const BookingDiningForm: React.FC<BookingDiningFormProps> = ({ details, setDetai
                                             type="number" 
                                             id={`${date}-${option.id}`}
                                             name={`${date}-${option.id}`}
-                                            value={details.dining[date]?.[option.id] || 0}
+                                            // FIX: Use optional chaining to prevent error if details.dining is undefined.
+                                            value={details.dining?.[date]?.[option.id] || 0}
                                             onChange={(e) => handleDiningChange(date, option.id, parseInt(e.target.value, 10) || 0)}
                                             min="0"
                                             max={totalGuests}

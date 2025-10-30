@@ -2,6 +2,7 @@ import React from 'react';
 import { IndividualReservation } from '../types';
 import { PrintIcon } from './icons/PrintIcon';
 import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
+import { GeneralitatLogoIcon } from './icons/GeneralitatLogoIcon';
 
 interface IndividualReservationPrintViewProps {
   reservation: IndividualReservation;
@@ -31,9 +32,11 @@ const IndividualReservationPrintView: React.FC<IndividualReservationPrintViewPro
         {/* Page 1 */}
         <div>
             {/* Header */}
-            <header className="mb-4">
-                <h1 className="text-xl font-bold">Generalitat de Catalunya</h1>
-                <h2 className="text-2xl font-bold mt-4">Registro de personas alojadas</h2>
+            <header className="mb-4 flex items-start space-x-4">
+                <GeneralitatLogoIcon className="w-24 h-auto" />
+                <div className="pt-2">
+                    <h2 className="text-2xl font-bold mt-4">Registro de personas alojadas</h2>
+                </div>
             </header>
 
             {/* Datos del contrato */}
@@ -75,7 +78,7 @@ const IndividualReservationPrintView: React.FC<IndividualReservationPrintViewPro
             
             {/* Datos personales */}
              <section className="mb-2">
-                <h3 className="font-bold bg-gray-200 border border-black p-1">Datos personales de la persona que se aloja (8)</h3>
+                <h3 className="font-bold bg-gray-200 border border-black p-1 text-base">Datos personales de la persona que se aloja (8)</h3>
                 <div className="grid grid-cols-6 border-b border-r border-black">
                     <Field label="Nombre *" value={gpd.name} className="col-span-2 border-l border-t" />
                     <Field label="Primer apellido *" value={gpd.firstSurname} className="col-span-2 border-l border-t" />
@@ -95,7 +98,7 @@ const IndividualReservationPrintView: React.FC<IndividualReservationPrintViewPro
 
             {/* Dirección postal */}
             <section className="mb-2">
-                <h3 className="font-bold bg-gray-200 border border-black p-1">Dirección postal de la persona que se aloja (12)</h3>
+                <h3 className="font-bold bg-gray-200 border border-black p-1 text-base">Dirección postal de la persona que se aloja (12)</h3>
                  <div className="grid grid-cols-6 border-b border-r border-black">
                     <Field label="Dirección postal *" value={gad.address} className="col-span-3 border-l border-t" />
                     <Field label="País *" value={gad.country} subtext="13" className="col-span-1 border-l border-t" />
@@ -203,10 +206,11 @@ const IndividualReservationPrintView: React.FC<IndividualReservationPrintViewPro
         </button>
         <button 
             onClick={onBack} 
-            className="bg-slate-500 text-white rounded-full p-3 shadow-lg hover:bg-slate-600 transition-transform hover:scale-110"
-            title="Volver"
+            className="bg-slate-500 text-white rounded-full p-4 shadow-lg hover:bg-slate-600 transition-transform hover:scale-110 flex items-center gap-3"
+            title="Volver / Cerrar"
         >
             <ArrowLeftIcon className="w-6 h-6" />
+            <span className="font-bold text-lg">Volver / Cerrar</span>
         </button>
     </div>
     </>

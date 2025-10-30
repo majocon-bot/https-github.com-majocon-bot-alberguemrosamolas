@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { IndividualRoom, Reservation } from '../types';
+import { IndividualRoom, Reservation, IndividualReservation } from '../types';
 
 interface OccupancyCalendarProps {
   rooms: IndividualRoom[];
   reservations: Reservation[];
+  individualReservations: IndividualReservation[];
 }
 
 const getRoomTypeColor = (type: string): string => {
@@ -24,7 +25,7 @@ const getRoomTypeColor = (type: string): string => {
 };
 
 
-const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservations }) => {
+const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservations, individualReservations }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const { year, month, daysInMonth } = useMemo(() => {
@@ -34,6 +35,25 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
     return { year, month, daysInMonth };
   }, [currentDate]);
 
+  const allReservations = useMemo(() => {
+    const combined: (Reservation | { id: string, roomId: string, guestName: string, checkIn: string, checkOut: string})[] = [...reservations];
+    
+    individualReservations.forEach(ir => {
+      const roomType = rooms.find(r => r.name.includes(` ${ir.contractDetails.roomNumber} `))?.type;
+      if (roomType) {
+        combined.push({
+          id: ir.id,
+          roomId: `${roomType}_${ir.contractDetails.roomNumber}`,
+          guestName: `${ir.guestPersonalDetails.firstSurname}, ${ir.guestPersonalDetails.name}`,
+          checkIn: ir.contractDetails.checkInDate,
+          checkOut: ir.contractDetails.checkOutDate,
+        });
+      }
+    });
+
+    return combined;
+  }, [reservations, individualReservations, rooms]);
+
   const goToPreviousMonth = () => {
     setCurrentDate(new Date(year, month - 1, 1));
   };
@@ -42,9 +62,9 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
     setCurrentDate(new Date(year, month + 1, 1));
   };
 
-  const getBookingForRoomAndDay = (roomId: string, day: number): Reservation | undefined => {
+  const getBookingForRoomAndDay = (roomId: string, day: number): (typeof allReservations[0]) | undefined => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return reservations.find(res => 
+    return allReservations.find(res => 
       res.roomId === roomId &&
       dateStr >= res.checkIn &&
       dateStr < res.checkOut

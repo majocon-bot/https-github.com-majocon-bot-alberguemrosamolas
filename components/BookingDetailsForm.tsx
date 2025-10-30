@@ -23,9 +23,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({ details, setDet
             newDetails.checkOut = nextDay.toISOString().split('T')[0];
         }
         
-        // When dates change, reset dining and other services options
-        // FIX: Added reset for dining options to ensure data consistency when dates are changed.
-        newDetails.dining = {};
+        // When dates change, reset other services options
         newDetails.otherServices = {};
         setDetails(newDetails);
     };
@@ -52,6 +50,10 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({ details, setDet
                         <label htmlFor="phone" className="block text-sm font-medium text-slate-600 mb-1">Teléfono (Responsable)</label>
                         <input type="tel" name="phone" id="phone" value={details.phone} onChange={handleDetailChange} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required/>
                     </div>
+                </div>
+                <div className="mt-6">
+                    <label htmlFor="observations" className="block text-sm font-medium text-slate-600 mb-1">Observaciones</label>
+                    <textarea name="observations" id="observations" value={details.observations} onChange={handleDetailChange} rows={4} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Alergias, peticiones especiales, etc."></textarea>
                 </div>
             </fieldset>
 

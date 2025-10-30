@@ -1,4 +1,5 @@
-import { RoomType, IndividualRoom, Reservation, DiningSelection, IndividualReservation } from './types';
+
+import { RoomType, IndividualRoom, Reservation, IndividualReservation, DiningSelection } from './types';
 
 // Source of truth from the provided PDF
 // FIX: Export ALL_ROOMS_DATA to make it available for import in other modules.
@@ -185,15 +186,14 @@ export const SERVICE_TYPES: RoomType[] = [
   },
 ];
 
-// FIX: Added DINING_OPTIONS to define available dining services.
-export const DINING_OPTIONS: { id: keyof DiningSelection; label: string }[] = [
+// FIX: Add dining options constant for dining services.
+export const DINING_OPTIONS: { id: keyof DiningSelection, label: string }[] = [
     { id: 'breakfast', label: 'Desayuno' },
     { id: 'lunch', label: 'Comida' },
     { id: 'dinner', label: 'Cena' },
     { id: 'morningSnack', label: 'Almuerzo' },
     { id: 'afternoonSnack', label: 'Merienda' },
 ];
-
 
 export const INDIVIDUAL_ROOMS: IndividualRoom[] = ALL_ROOMS_DATA.map(room => ({
     id: `${room.type}_${room.number}`,
