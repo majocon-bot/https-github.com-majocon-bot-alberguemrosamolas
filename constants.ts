@@ -1,4 +1,4 @@
-import { RoomType, IndividualRoom, Reservation, DiningSelection } from './types';
+import { RoomType, IndividualRoom, Reservation, DiningSelection, IndividualReservation } from './types';
 
 // Source of truth from the provided PDF
 // FIX: Export ALL_ROOMS_DATA to make it available for import in other modules.
@@ -336,4 +336,76 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     checkIn: formatDate(new Date(today.getFullYear(), today.getMonth(), 1)), 
     checkOut: formatDate(new Date(today.getFullYear(), today.getMonth(), 30)) 
   },
+];
+
+export const ESTABLISHMENT_DETAILS = {
+    policeId: 'ID50008751',
+    establishmentName: 'ALBERGUE MARIA ROSA MOLAS',
+    hasInternet: true,
+};
+
+export const MOCK_INDIVIDUAL_RESERVATIONS: IndividualReservation[] = [
+    {
+        id: 'indiv_res_1',
+        status: 'pending_guest',
+        contractDetails: {
+            ...ESTABLISHMENT_DETAILS,
+            contractNumber: 'C-2024-001',
+            formalizationDate: formatDate(new Date()),
+            contractType: 'RESERVA',
+            checkInDate: formatDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 5)),
+            checkOutDate: formatDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 10)),
+            roomNumber: '12',
+            travelers: 1,
+            paymentType: 'Tarjeta de crédito',
+        },
+        guestPersonalDetails: {
+            name: 'Juan',
+            firstSurname: 'Pérez',
+        },
+        guestIdDetails: {},
+        guestAddressDetails: {},
+    },
+    {
+        id: 'indiv_res_2',
+        status: 'completed',
+        contractDetails: {
+            ...ESTABLISHMENT_DETAILS,
+            contractNumber: 'C-2024-002',
+            formalizationDate: formatDate(new Date()),
+            contractType: 'RESERVA',
+            checkInDate: formatDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2)),
+            checkOutDate: formatDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 4)),
+            roomNumber: '3',
+            travelers: 1,
+            paymentType: 'Efectivo',
+        },
+        guestIdDetails: {
+            documentType: 'NIF',
+            documentNumber: '12345678Z',
+        },
+        guestPersonalDetails: {
+            name: 'Ana',
+            firstSurname: 'García',
+            secondSurname: 'López',
+            sex: 'Mujer',
+            birthDate: '1990-05-15',
+            nationality: 'Española',
+            email: 'ana.garcia@email.com',
+            phone: '600123456',
+        },
+        guestAddressDetails: {
+            address: 'Calle Mayor 1',
+            country: 'España',
+            province: 'Madrid',
+            municipality: 'Madrid',
+            locality: 'Madrid',
+            postalCode: '28001'
+        },
+        consents: {
+            healthData: true,
+            commercialInfo: false,
+            imageUse: false,
+        }
+    }
 ];

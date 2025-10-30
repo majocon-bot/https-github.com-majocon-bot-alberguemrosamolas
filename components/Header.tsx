@@ -6,8 +6,10 @@ import { HomeIcon } from './icons/HomeIcon';
 import { BriefcaseIcon } from './icons/BriefcaseIcon';
 import { SettingsIcon } from './icons/SettingsIcon';
 import { ClipboardCheckIcon } from './icons/ClipboardCheckIcon';
+import { UserPlusIcon } from './icons/UserPlusIcon';
+import { DiningIcon } from './icons/DiningIcon';
 
-type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'settings' | 'room_status';
+type View = 'dashboard' | 'booking' | 'individual_reservation' | 'calendar' | 'reservations' | 'services' | 'settings' | 'room_status' | 'dining_hall';
 
 interface HeaderProps {
   currentView: View;
@@ -20,7 +22,7 @@ const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
   const inactiveClasses = "bg-white text-slate-600 hover:bg-slate-200";
 
   return (
-    <header className="bg-white shadow-md">
+    <header className="bg-white shadow-md no-print">
       <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
         <div className="text-2xl font-bold text-slate-800">
           Albergue Mª Rosa Molas
@@ -41,6 +43,14 @@ const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
           >
             <ListIcon className="w-5 h-5" />
             <span className="hidden md:inline">Reserva Grupal</span>
+          </button>
+           <button
+            onClick={() => setView('individual_reservation')}
+            className={`${baseClasses} ${currentView === 'individual_reservation' ? activeClasses : inactiveClasses}`}
+            aria-current={currentView === 'individual_reservation' ? 'page' : undefined}
+          >
+            <UserPlusIcon className="w-5 h-5" />
+            <span className="hidden md:inline">Reserva Individual</span>
           </button>
            <button
             onClick={() => setView('room_status')}
@@ -73,6 +83,14 @@ const Header: React.FC<HeaderProps> = ({ currentView, setView }) => {
           >
             <BriefcaseIcon className="w-5 h-5" />
             <span className="hidden md:inline">Salas</span>
+          </button>
+          <button
+            onClick={() => setView('dining_hall')}
+            className={`${baseClasses} ${currentView === 'dining_hall' ? activeClasses : inactiveClasses}`}
+            aria-current={currentView === 'dining_hall' ? 'page' : undefined}
+          >
+            <DiningIcon className="w-5 h-5" />
+            <span className="hidden md:inline">Comedor</span>
           </button>
           <button
             onClick={() => setView('settings')}

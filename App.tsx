@@ -1,8 +1,8 @@
 
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { RoomSelection, BookingDetails, Reservation, GroupedReservation, GroupedReservationWithCost, TimeSlot, ServiceBooking, FiscalDetails, DiningSelection } from './types';
-import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, MOCK_RESERVATIONS, ALL_ROOMS_DATA, DINING_OPTIONS } from './constants';
+import { RoomSelection, BookingDetails, Reservation, GroupedReservation, GroupedReservationWithCost, TimeSlot, ServiceBooking, FiscalDetails, DiningSelection, IndividualReservation } from './types';
+import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, MOCK_RESERVATIONS, ALL_ROOMS_DATA, DINING_OPTIONS, MOCK_INDIVIDUAL_RESERVATIONS } from './constants';
 import RoomTypeCard from './components/RoomTypeCard';
 import BookingSummary from './components/BookingSummary';
 import { generateBookingConfirmation } from './services/geminiService';
@@ -18,8 +18,10 @@ import SettingsView from './components/SettingsView';
 import RoomStatusView from './components/RoomStatusView';
 import BookingDiningForm from './components/BookingDiningForm';
 import DiningHallView from './components/DiningHallView';
+import IndividualReservationsView from './components/IndividualReservationsView';
+import IndividualBookingForm from './components/IndividualBookingForm';
 
-type View = 'dashboard' | 'booking' | 'calendar' | 'reservations' | 'services' | 'invoice' | 'settings' | 'room_status' | 'dining_hall';
+type View = 'dashboard' | 'booking' | 'individual_reservation' | 'calendar' | 'reservations' | 'services' | 'invoice' | 'settings' | 'room_status' | 'dining_hall';
 type BookingStep = 'options' | 'dining' | 'schedule' | 'loading' | 'confirmed';
 
 const today = new Date();
@@ -72,6 +74,9 @@ const App: React.FC = () => {
   const [bookingDetails, setBookingDetails] = useState<BookingDetails>(initialDetails);
   
   const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS);
+  const [individualReservations, setIndividualReservations] = useState<IndividualReservation[]>(MOCK_INDIVIDUAL_RESERVATIONS);
+  const [guestFormId, setGuestFormId] = useState<string | null>(null);
+
   const [editingGroup, setEditingGroup] = useState<GroupedReservation | null>(null);
   const [invoiceData, setInvoiceData] = useState<GroupedReservationWithCost | null>(null);
 
@@ -89,6 +94,13 @@ const App: React.FC = () => {
   
   const allBookableItems = useMemo(() => [...ROOM_TYPES, ...SERVICE_TYPES], []);
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const formId = urlParams.get('guestFormId');
+    if (formId) {
+        setGuestFormId(formId);
+    }
+  }, []);
 
   const handleCountChange = (roomId: string, newCount: number) => {
     setRoomSelection(prev => ({ ...prev, [roomId]: newCount }));
@@ -384,12 +396,16 @@ const App: React.FC = () => {
   };
 
   const handleExportData = () => {
+      const allData = {
+          groupReservations: reservations,
+          individualReservations: individualReservations,
+      };
       const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
-        JSON.stringify(reservations, null, 2)
+        JSON.stringify(allData, null, 2)
       )}`;
       const link = document.createElement("a");
       link.href = jsonString;
-      link.download = "reservas_albergue.json";
+      link.download = "reservas_albergue_completo.json";
       link.click();
   };
 
@@ -399,19 +415,47 @@ const App: React.FC = () => {
         fileReader.readAsText(event.target.files[0], "UTF-8");
         fileReader.onload = e => {
             try {
-                const importedReservations = JSON.parse(e.target?.result as string);
-                // Basic validation could be added here
-                if (Array.isArray(importedReservations)) {
-                    setReservations(importedReservations);
+                const importedData = JSON.parse(e.target?.result as string);
+                // Basic validation
+                if (importedData && Array.isArray(importedData.groupReservations) && Array.isArray(importedData.individualReservations)) {
+                    setReservations(importedData.groupReservations);
+                    setIndividualReservations(importedData.individualReservations);
                     alert('Datos importados correctamente.');
-                } else {
-                    throw new Error("Invalid format");
+                } else { // Handle old format for backward compatibility
+                     if (Array.isArray(importedData)) {
+                        setReservations(importedData);
+                        alert('Datos (formato antiguo) importados correctamente.');
+                     } else {
+                        throw new Error("Invalid format");
+                     }
                 }
             } catch (error) {
                 alert('Error al importar el archivo. Asegúrate de que es un JSON válido.');
             }
         };
     }
+  };
+
+  const handleSaveIndividualReservation = (reservation: IndividualReservation) => {
+    setIndividualReservations(prev => {
+        const index = prev.findIndex(r => r.id === reservation.id);
+        if (index > -1) {
+            const newReservations = [...prev];
+            newReservations[index] = reservation;
+            return newReservations;
+        }
+        return [...prev, reservation];
+    });
+    alert('Ficha de registro guardada.');
+  };
+
+  const handleGuestFormSubmit = (reservation: IndividualReservation) => {
+     handleSaveIndividualReservation(reservation);
+     // In a real app, you might want to clear the URL param and show a success message
+     alert('¡Gracias! Tus datos han sido enviados correctamente.');
+     setGuestFormId(null);
+     // remove query param from URL
+     window.history.replaceState({}, document.title, window.location.pathname);
   };
 
 
@@ -589,6 +633,30 @@ const App: React.FC = () => {
     );
   };
   
+  if (guestFormId) {
+    const reservation = individualReservations.find(r => r.id === guestFormId);
+    if (reservation) {
+        return (
+            <div className="min-h-screen bg-slate-100 p-4 sm:p-6 lg:p-8">
+                 <IndividualBookingForm
+                    reservation={reservation}
+                    onSave={handleGuestFormSubmit}
+                    mode="guest"
+                 />
+            </div>
+        )
+    } else {
+        return (
+             <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+                <div className="bg-white p-8 rounded-xl shadow-lg text-center">
+                    <h1 className="text-2xl font-bold text-red-600">Error</h1>
+                    <p className="text-slate-600 mt-2">No se ha encontrado la ficha de registro solicitada.</p>
+                </div>
+            </div>
+        )
+    }
+  }
+
   if (bookingStep === 'confirmed') {
     return renderConfirmationScreen();
   }
@@ -614,7 +682,7 @@ const App: React.FC = () => {
           <>
             <header className="text-center mb-12">
               <h1 className="text-5xl font-extrabold text-slate-800">
-                {isEditing ? 'Editar Reserva' : 'Crear Reserva'}
+                {isEditing ? 'Editar Reserva' : 'Crear Reserva Grupal'}
               </h1>
               <p className="text-xl text-slate-500 mt-2">
                 {isEditing && `Modificando la reserva de ${editingGroup.guestName}. `}
@@ -732,6 +800,12 @@ const App: React.FC = () => {
               </div>
             </main>
           </>
+        )}
+        {view === 'individual_reservation' && (
+           <IndividualReservationsView
+              reservations={individualReservations}
+              onSave={handleSaveIndividualReservation}
+            />
         )}
         {view === 'calendar' && (
            <OccupancyCalendar rooms={ALL_INDIVIDUAL_ITEMS} reservations={reservations} />

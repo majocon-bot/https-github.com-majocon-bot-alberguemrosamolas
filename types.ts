@@ -109,3 +109,64 @@ export interface FiscalDetails {
     phone: string;
     email: string;
 }
+
+// New Interfaces for Individual Reservation Form
+export interface ContractDetails {
+  policeId: string;
+  establishmentName: string;
+  contractNumber: string;
+  formalizationDate: string;
+  contractType: 'RESERVA' | 'CONTRATO_EN_CURSO';
+  checkInDate: string;
+  checkOutDate: string;
+  roomNumber: string;
+  travelers: number;
+  paymentType: string;
+  hasInternet: boolean;
+}
+
+export interface GuestIdDetails {
+  documentType: 'NIF' | 'NIE' | 'Pasaporte' | '';
+  documentNumber: string;
+  supportDocumentNumber?: string;
+  expeditionDate?: string;
+}
+
+export interface GuestPersonalDetails {
+  name: string;
+  firstSurname: string;
+  secondSurname?: string;
+  sex: 'Hombre' | 'Mujer' | 'Otro' | '';
+  birthDate: string;
+  nationality: string;
+  email: string;
+  phone: string;
+  kinship?: string;
+}
+
+export interface GuestAddressDetails {
+  address: string;
+  country: string;
+  province?: string;
+  municipality?: string;
+  locality: string;
+  postalCode: string;
+}
+
+export interface IndividualReservation {
+  id: string;
+  status: 'pending_staff' | 'pending_guest' | 'completed';
+  contractDetails: ContractDetails;
+  guestIdDetails: Partial<GuestIdDetails>;
+  guestPersonalDetails: Partial<GuestPersonalDetails>;
+  guestAddressDetails: Partial<GuestAddressDetails>;
+  signature?: {
+    signed: boolean;
+    locationAndDate: string;
+  };
+  consents?: {
+    healthData: boolean;
+    commercialInfo: boolean;
+    imageUse: boolean;
+  };
+}
