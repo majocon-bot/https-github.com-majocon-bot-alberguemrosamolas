@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { IndividualReservation, ContractDetails, GuestIdDetails, GuestPersonalDetails, GuestAddressDetails } from '../types';
+import { PrintIcon } from './icons/PrintIcon';
 
 interface IndividualBookingFormProps {
   reservation: IndividualReservation;
   onSave: (reservation: IndividualReservation) => void;
   onCancel?: () => void;
   mode: 'staff' | 'guest';
+  onPrint?: (reservation: IndividualReservation) => void;
 }
 
-const IndividualBookingForm: React.FC<IndividualBookingFormProps> = ({ reservation, onSave, onCancel, mode }) => {
+const IndividualBookingForm: React.FC<IndividualBookingFormProps> = ({ reservation, onSave, onCancel, mode, onPrint }) => {
   const [formData, setFormData] = useState<IndividualReservation>(reservation);
 
   useEffect(() => {
@@ -175,6 +177,12 @@ const IndividualBookingForm: React.FC<IndividualBookingFormProps> = ({ reservati
             {isStaff && onCancel && (
                 <button type="button" onClick={onCancel} className="bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">
                     Cancelar
+                </button>
+            )}
+             {isStaff && onPrint && (
+                <button type="button" onClick={() => onPrint(formData)} className="flex items-center space-x-2 bg-white text-slate-700 font-bold py-2 px-4 rounded-lg hover:bg-slate-100 transition-colors border border-slate-300">
+                    <PrintIcon className="w-5 h-5"/>
+                    <span>Imprimir</span>
                 </button>
             )}
             <button type="submit" className="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors shadow-md">

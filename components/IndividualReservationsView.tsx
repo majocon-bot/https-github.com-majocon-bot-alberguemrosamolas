@@ -1,21 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IndividualReservation } from '../types';
 import IndividualBookingForm from './IndividualBookingForm';
 import { PlusIcon } from './icons/PlusIcon';
 import { EditIcon } from './icons/EditIcon';
 import { LinkIcon } from './icons/LinkIcon';
+import { PrintIcon } from './icons/PrintIcon';
 import { ESTABLISHMENT_DETAILS } from '../constants';
 
 interface IndividualReservationsViewProps {
   reservations: IndividualReservation[];
   onSave: (reservation: IndividualReservation) => void;
+  onPrint: (reservation: IndividualReservation) => void;
+  reservationToEdit?: IndividualReservation | null;
+  onClearReservationToEdit?: () => void;
 }
 
 const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
-const IndividualReservationsView: React.FC<IndividualReservationsViewProps> = ({ reservations, onSave }) => {
+const IndividualReservationsView: React.FC<IndividualReservationsViewProps> = ({ 
+    reservations, 
+    onSave, 
+    onPrint,
+    reservationToEdit,
+    onClearReservationToEdit
+}) => {
   const [view, setView] = useState<'list' | 'form'>('list');
   const [currentReservation, setCurrentReservation] = useState<IndividualReservation | null>(null);
+
+  useEffect(() => {
+    if (reservationToEdit) {
+      handleEdit(reservationToEdit);
+    }
+  }, [reservationToEdit]);
 
   const handleNew = () => {
     setCurrentReservation({
@@ -53,6 +69,9 @@ const IndividualReservationsView: React.FC<IndividualReservationsViewProps> = ({
   const handleCancel = () => {
     setView('list');
     setCurrentReservation(null);
+    if (onClearReservationToEdit) {
+      onClearReservationToEdit();
+    }
   };
 
   const handleCopyLink = (id: string) => {
@@ -83,6 +102,7 @@ const IndividualReservationsView: React.FC<IndividualReservationsViewProps> = ({
         onSave={handleSave}
         onCancel={handleCancel}
         mode="staff"
+        onPrint={onPrint}
       />
     );
   }
@@ -130,6 +150,7 @@ const IndividualReservationsView: React.FC<IndividualReservationsViewProps> = ({
                     <td className="px-6 py-4">{getStatusChip(res.status)}</td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex justify-center items-center space-x-1">
+                         <button onClick={() => onPrint(res)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors" title="Imprimir Ficha"><PrintIcon className="w-4 h-4" /></button>
                          <button onClick={() => handleCopyLink(res.id)} className="p-2 text-green-600 hover:bg-green-100 rounded-full transition-colors" title="Copiar enlace para el huésped"><LinkIcon className="w-4 h-4" /></button>
                          <button onClick={() => handleEdit(res)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors" title="Editar Ficha"><EditIcon className="w-4 h-4" /></button>
                       </div>

@@ -20,6 +20,7 @@ import BookingDiningForm from './components/BookingDiningForm';
 import DiningHallView from './components/DiningHallView';
 import IndividualReservationsView from './components/IndividualReservationsView';
 import IndividualBookingForm from './components/IndividualBookingForm';
+import IndividualReservationPrintView from './components/IndividualReservationPrintView';
 
 type View = 'dashboard' | 'booking' | 'individual_reservation' | 'calendar' | 'reservations' | 'services' | 'invoice' | 'settings' | 'room_status' | 'dining_hall';
 type BookingStep = 'options' | 'dining' | 'schedule' | 'loading' | 'confirmed';
@@ -76,6 +77,9 @@ const App: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS);
   const [individualReservations, setIndividualReservations] = useState<IndividualReservation[]>(MOCK_INDIVIDUAL_RESERVATIONS);
   const [guestFormId, setGuestFormId] = useState<string | null>(null);
+  const [printingIndividualReservation, setPrintingIndividualReservation] = useState<IndividualReservation | null>(null);
+  const [reservationToEdit, setReservationToEdit] = useState<IndividualReservation | null>(null);
+
 
   const [editingGroup, setEditingGroup] = useState<GroupedReservation | null>(null);
   const [invoiceData, setInvoiceData] = useState<GroupedReservationWithCost | null>(null);
@@ -101,6 +105,7 @@ const App: React.FC = () => {
         setGuestFormId(formId);
     }
   }, []);
+  
 
   const handleCountChange = (roomId: string, newCount: number) => {
     setRoomSelection(prev => ({ ...prev, [roomId]: newCount }));
@@ -311,7 +316,6 @@ const App: React.FC = () => {
         maxCheckOut,
         roomSummary,
         otherServicesSummary: firstRes.otherServices || {},
-        // FIX: Added missing diningSummary and unitServicesSummary properties to conform to GroupedReservation type.
         diningSummary: firstRes.dining || {},
         unitServicesSummary: firstRes.unitServices || {},
         totalGuests: 0, 
@@ -446,6 +450,7 @@ const App: React.FC = () => {
         }
         return [...prev, reservation];
     });
+    setReservationToEdit(null); // Clear editing state after save
     alert('Ficha de registro guardada.');
   };
 
@@ -456,6 +461,19 @@ const App: React.FC = () => {
      setGuestFormId(null);
      // remove query param from URL
      window.history.replaceState({}, document.title, window.location.pathname);
+  };
+  
+  const handlePrintIndividualReservation = (reservation: IndividualReservation) => {
+    setPrintingIndividualReservation(reservation);
+  };
+  
+  const handleStartIndividualEdit = (reservation: IndividualReservation) => {
+    setReservationToEdit(reservation);
+    setView('individual_reservation');
+  };
+  
+  const handleClearIndividualEdit = () => {
+    setReservationToEdit(null);
   };
 
 
@@ -547,7 +565,6 @@ const App: React.FC = () => {
                     {diningDates.map(date => {
                         const diningDay = bookingDetails.dining?.[date];
                         if (!diningDay) return null;
-                        // FIX: Explicitly cast `count` to a number before comparison to resolve a TypeScript type error where `count` was inferred as `unknown`.
                         const services = Object.entries(diningDay).filter(([, count]) => Number(count) > 0);
                         if(services.length === 0) return null;
 
@@ -633,6 +650,13 @@ const App: React.FC = () => {
     );
   };
   
+  if (printingIndividualReservation) {
+    return <IndividualReservationPrintView 
+                reservation={printingIndividualReservation} 
+                onBack={() => setPrintingIndividualReservation(null)}
+            />;
+  }
+
   if (guestFormId) {
     const reservation = individualReservations.find(r => r.id === guestFormId);
     if (reservation) {
@@ -805,6 +829,9 @@ const App: React.FC = () => {
            <IndividualReservationsView
               reservations={individualReservations}
               onSave={handleSaveIndividualReservation}
+              onPrint={handlePrintIndividualReservation}
+              reservationToEdit={reservationToEdit}
+              onClearReservationToEdit={handleClearIndividualEdit}
             />
         )}
         {view === 'calendar' && (
@@ -816,9 +843,12 @@ const App: React.FC = () => {
         {view === 'reservations' && (
            <ReservationsListView 
               reservations={reservations} 
+              individualReservations={individualReservations}
               onDeleteGroup={handleDeleteGroup}
               onEditGroup={handleStartEdit}
               onGenerateInvoice={handleGenerateInvoice}
+              onEditIndividual={handleStartIndividualEdit}
+              onPrintIndividual={handlePrintIndividualReservation}
             />
         )}
         {view === 'services' && (
