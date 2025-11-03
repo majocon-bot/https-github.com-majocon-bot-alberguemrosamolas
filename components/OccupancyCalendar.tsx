@@ -98,10 +98,10 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
     document.body.classList.add('printing-calendar');
     printableElement.classList.add('printable-area');
     
-    // Use a small timeout to let the DOM update before calling print, fixing the blank page issue.
+    // Use a more generous timeout to ensure styles are applied before printing, fixing the blank page issue.
     setTimeout(() => {
         window.print();
-    }, 100);
+    }, 250);
   };
 
   const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];

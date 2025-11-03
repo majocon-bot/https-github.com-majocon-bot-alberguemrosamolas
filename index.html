@@ -35,9 +35,7 @@
         visibility: visible;
       }
       .printable-area {
-        position: absolute;
-        left: 0;
-        top: 0;
+        position: static; /* Changed from absolute to prevent blank pages */
         width: 100%;
         box-shadow: none !important;
         border: none;
@@ -60,11 +58,8 @@
       }
       body.printing-calendar .printable-area {
         visibility: visible;
-        position: absolute;
-        left: 0;
-        top: 0;
+        position: static; /* Changed from absolute */
         width: 100%;
-        height: 100%;
       }
       body.printing-calendar .printable-area table {
         font-size: 7px; /* Fine-tune font size */
