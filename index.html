@@ -54,19 +54,60 @@
       }
       /* Fine-tune table styles for printing */
       .printable-area table {
-        font-size: 7px;
+        font-size: 8px;
         width: 100%;
+        border-collapse: collapse;
         table-layout: fixed;
       }
       .printable-area th,
       .printable-area td {
-        padding: 1px 2px;
-        white-space: normal;
-        word-break: break-word;
+        border: 1px solid #a0aec0; /* Medium gray border */
+        padding: 2px;
+        white-space: nowrap;
         overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+      }
+       /* First column styling */
+      .printable-area td:first-child, .printable-area th:first-child {
+          text-align: left;
+          font-weight: bold;
+          white-space: normal;
+          word-break: break-word;
+          background-color: #f7fafc !important; /* Light gray background */
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+      }
+      /* Make day headers smaller */
+      .printable-area thead th {
+        font-weight: normal;
+        text-align: center;
+      }
+      .printable-area thead th div:first-child { /* Day name: Dom, Lun... */
+        font-size: 7px;
+        text-transform: uppercase;
+      }
+      .printable-area thead th div:last-child { /* Day number: 1, 2... */
+         font-size: 10px;
+         font-weight: bold;
+      }
+      /* Color for booked cells */
+      .printable-area td.is-booked {
+          background-color: #dbeafe !important; /* Light blue-200 */
+          color: #1e40af !important;
+          font-weight: bold;
+          text-align: center;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+      }
+      /* Color for available cells */
+      .printable-area td.is-available {
+          background-color: #dcfce7 !important; /* Light green-200 */
+           -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
       }
       .printable-area .sticky {
-        position: static; /* Remove sticky positioning for print */
+        position: static !important; /* Remove sticky positioning for print */
       }
       .break-before-page {
         page-break-before: always;

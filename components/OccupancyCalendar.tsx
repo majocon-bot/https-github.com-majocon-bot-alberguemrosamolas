@@ -144,7 +144,7 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
                   return (
                     <td 
                         key={i} 
-                        className={`p-1 border border-slate-200 text-xs text-center align-middle whitespace-nowrap overflow-hidden text-ellipsis ${isBooked ? 'bg-indigo-200 text-indigo-900 font-semibold' : 'bg-green-100/50'}`} 
+                        className={`p-1 border border-slate-200 text-xs text-center align-middle whitespace-nowrap overflow-hidden text-ellipsis ${isBooked ? 'bg-indigo-200 text-indigo-900 font-semibold is-booked' : 'bg-green-100/50 is-available'}`} 
                         title={isBooked ? `Ocupado por ${booking.guestName}` : 'Disponible'}
                     >
                         {booking?.guestName}
