@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { IndividualRoom, Reservation, IndividualReservation } from '../types';
 import { PrintIcon } from './icons/PrintIcon';
@@ -78,32 +79,29 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
     if (!printableElement) return;
 
     const style = document.createElement('style');
-    // Set landscape orientation and adjust margins for printing
     style.innerHTML = `@page { size: landscape; margin: 10mm; }`;
     style.id = 'landscape-print-style';
     
     const cleanup = () => {
-        // This function will be called after the print dialog is closed
         printableElement.classList.remove('printable-area');
         document.body.classList.remove('printing-calendar');
         const styleElement = document.getElementById('landscape-print-style');
         if (styleElement) {
             document.head.removeChild(styleElement);
         }
-        // Remove the event listener to avoid memory leaks
         window.removeEventListener('afterprint', cleanup);
     };
 
-    // Add an event listener for after printing
     window.addEventListener('afterprint', cleanup);
     
-    // Add the styles and classes needed for printing
     document.head.appendChild(style);
     document.body.classList.add('printing-calendar');
     printableElement.classList.add('printable-area');
     
-    // Trigger the print dialog
-    window.print();
+    // Use a small timeout to let the DOM update before calling print, fixing the blank page issue.
+    setTimeout(() => {
+        window.print();
+    }, 100);
   };
 
   const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -147,7 +145,7 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
               <tr key={room.id}>
                 <td className={`sticky left-0 p-2 border-slate-200 z-10 text-sm text-left font-medium ${getRoomTypeColor(room.type)}`}>
                   <div className="font-bold whitespace-nowrap">{room.name}</div>
-                  {room.description && <div className="text-xs font-normal text-slate-600 whitespace-normal max-w-[250px]">{room.description}</div>}
+                  {room.description && <div className="text-xs font-normal text-slate-600 whitespace-normal max-w-[250px] no-print">{room.description}</div>}
                 </td>
                 {Array.from({ length: daysInMonth }, (_, i) => {
                   const day = i + 1;
