@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo } from 'react';
 import { IndividualRoom, Reservation, IndividualReservation } from '../types';
 import { PrintIcon } from './icons/PrintIcon';
@@ -42,12 +41,15 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
     const combined: (Reservation | { id: string, roomId: string, guestName: string, checkIn: string, checkOut: string})[] = [...reservations];
     
     individualReservations.forEach(ir => {
-      const roomType = rooms.find(r => r.name.includes(` ${ir.contractDetails.roomNumber} `))?.type;
-      if (roomType) {
+      if (!ir.contractDetails.roomNumber) return;
+      // FIX: The logic to find a room was incorrect. It now checks if the room name starts with the room number, which is more reliable.
+      const roomData = rooms.find(r => r.name.startsWith(`${ir.contractDetails.roomNumber} `));
+      if (roomData) {
+        const guestName = `${ir.guestPersonalDetails.firstSurname || ''}, ${ir.guestPersonalDetails.name || ''}`.replace(/^, |, $/g, '');
         combined.push({
           id: ir.id,
-          roomId: `${roomType}_${ir.contractDetails.roomNumber}`,
-          guestName: `${ir.guestPersonalDetails.firstSurname}, ${ir.guestPersonalDetails.name}`,
+          roomId: roomData.id,
+          guestName: guestName,
           checkIn: ir.contractDetails.checkInDate,
           checkOut: ir.contractDetails.checkOutDate,
         });
