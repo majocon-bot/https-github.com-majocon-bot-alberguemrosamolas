@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 // FIX: Import DiningSelection type and DINING_OPTIONS constant to resolve module errors.
 import { BookingDetails, DiningSelection } from '../types';
@@ -87,7 +86,8 @@ const BookingDiningForm: React.FC<BookingDiningFormProps> = ({ details, setDetai
                                             name={`${date}-${option.id}`}
                                             // FIX: Use optional chaining to prevent error if details.dining is undefined.
                                             value={details.dining?.[date]?.[option.id] || 0}
-                                            onChange={(e) => handleDiningChange(option.id, parseInt(e.target.value, 10) || 0)}
+                                            // FIX: The `handleDiningChange` function expects `date` as its first argument, which was missing.
+                                            onChange={(e) => handleDiningChange(date, option.id, parseInt(e.target.value, 10) || 0)}
                                             min="0"
                                             max={totalGuests}
                                             className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"

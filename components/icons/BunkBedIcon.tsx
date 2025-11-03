@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-export const BedIcon: React.FC<{ className?: string }> = ({ className }) => (
+export const BunkBedIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     className={className}
@@ -15,9 +15,10 @@ export const BedIcon: React.FC<{ className?: string }> = ({ className }) => (
     strokeLinejoin="round"
   >
     <path d="M3 20v-8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8" />
-    <path d="M3 12H1" />
-    <path d="M23 12h-2" />
-    <path d="M3 8v-3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3" />
-    <path d="M7 12a2 2 0 0 1-2-2v0a2 2 0 0 1 2-2h0" />
+    <path d="M3 10V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4" />
+    <path d="M12 20V12" />
+    <path d="M12 10V4" />
+    <path d="M5 16h14" />
+    <path d="M5 8h14" />
   </svg>
 );

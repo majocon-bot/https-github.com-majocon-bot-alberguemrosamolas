@@ -1,8 +1,10 @@
+
 import React, { useState, useMemo } from 'react';
 import { Reservation, RoomType, IndividualReservation } from '../types';
 import { UserIcon } from './icons/UserIcon';
 import { BedIcon } from './icons/BedIcon';
 import { MapPinIcon } from './icons/MapPinIcon';
+import { BunkBedIcon } from './icons/BunkBedIcon';
 
 interface RoomData {
     number: number;
@@ -132,7 +134,11 @@ const RoomStatusView: React.FC<RoomStatusViewProps> = ({ reservations, individua
                         <span>{room.capacity} Huéspedes</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <BedIcon className="w-5 h-5 text-indigo-500"/>
+                        {room.bedConfiguration?.toLowerCase().includes('litera') ? (
+                            <BunkBedIcon className="w-5 h-5 text-indigo-500 flex-shrink-0"/>
+                        ) : (
+                            <BedIcon className="w-5 h-5 text-indigo-500 flex-shrink-0"/>
+                        )}
                         <span>{room.bedConfiguration || 'No especificado'}</span>
                     </div>
                     <div className="flex items-center space-x-2">

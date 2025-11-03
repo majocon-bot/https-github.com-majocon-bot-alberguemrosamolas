@@ -6,9 +6,9 @@ import { RoomType, IndividualRoom, Reservation, IndividualReservation, DiningSel
 // FIX: Export ALL_ROOMS_DATA to make it available for import in other modules.
 export const ALL_ROOMS_DATA = [
     // Cuádruple (Capacity 4)
-    { number: 16, type: 'quad', typeName: 'Habitación Cuádruple', floor: '1°' },
-    { number: 18, type: 'quad', typeName: 'Habitación Cuádruple', floor: '1°' },
-    { number: 20, type: 'quad', typeName: 'Habitación Cuádruple', floor: '1°' },
+    { number: 16, type: 'quad', typeName: 'Habitación Cuádruple', floor: '1º Jardín' },
+    { number: 18, type: 'quad', typeName: 'Habitación Cuádruple', floor: '1º Jardín' },
+    { number: 20, type: 'quad', typeName: 'Habitación Cuádruple', floor: '1º Jardín' },
     { number: 44, type: 'quad', typeName: 'Habitación Cuádruple', floor: '2°' },
     { number: 46, type: 'quad', typeName: 'Habitación Cuádruple', floor: '2°' },
     { number: 48, type: 'quad', typeName: 'Habitación Cuádruple', floor: '2°' },
@@ -48,34 +48,34 @@ export const ALL_ROOMS_DATA = [
     { number: 39, type: 'single', typeName: 'Habitación Individual', floor: '2º Xerta' },
     { number: 41, type: 'single', typeName: 'Habitación Individual', floor: '2º Xerta' },
     { number: 43, type: 'single', typeName: 'Habitación Individual', floor: '2º Xerta' },
-    // Con 2 Literas (Capacity 4)
-    { number: 23, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '1º Xerta' },
-    { number: 25, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '1º Xerta' },
-    { number: 27, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '1º Xerta' },
-    { number: 28, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '1º Xerta' },
-    { number: 47, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '2º Jardín' },
-    { number: 49, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '2º Jardín' },
-    { number: 51, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '2º Jardín' },
-    { number: 53, type: 'bunk', typeName: 'Habitación con 2 Literas', floor: '2º Jardín' },
+    // Doble con litera (Capacity 2)
+    { number: 23, type: 'bunk', typeName: 'Habitación Doble (Litera)', floor: '1º Xerta' },
+    { number: 25, type: 'bunk', typeName: 'Habitación Doble (Litera)', floor: '1º Xerta' },
+    { number: 27, type: 'bunk', typeName: 'Habitación Doble (Litera)', floor: '1º Xerta' },
+    { number: 28, type: 'bunk', typeName: 'Habitación Doble (Litera)', floor: '1º Xerta' },
+    { number: 47, type: 'bunk', typeName: 'Habitación Doble (Litera)', floor: '2º Jardín' },
+    { number: 49, type: 'bunk', typeName: 'Habitación Doble (Litera)', floor: '2º Jardín' },
+    { number: 51, type: 'bunk', typeName: 'Habitación Doble (Litera)', floor: '2º Jardín' },
+    { number: 53, type: 'bunk', typeName: 'Habitación Doble (Litera)', floor: '2º Jardín' },
     // Triple (Capacity 3)
     { number: 24, type: 'triple', typeName: 'Habitación Triple', floor: '1º Jardín' },
     { number: 52, type: 'triple', typeName: 'Habitación Triple', floor: '2º Jardín' },
-    // Especial (Capacity 2)
-    { number: 26, type: 'special', typeName: 'Habitación Especial', floor: '1º Jardín' },
-    { number: 54, type: 'special', typeName: 'Habitación Especial', floor: '2º Xerta' },
+    // Especial (Capacity 1)
+    { number: 26, type: 'special', typeName: 'Habitación Especial (Adaptada)', floor: '1º Jardín' },
+    { number: 54, type: 'special', typeName: 'Habitación Especial (Adaptada)', floor: '2º Xerta' },
 ];
 
 export const ROOM_TYPES: RoomType[] = [
   {
     id: 'quad',
     name: 'Habitación Cuádruple',
-    description: 'Ideal para pequeños grupos y amigos. Capacidad para 4 personas.',
+    description: 'Ideal para grupos, equipada con 2 literas. Algunas con vistas al jardín. Capacidad para 4 personas.',
     capacity: 4,
     available: 6,
     image: 'https://picsum.photos/seed/quad/600/400',
     price: 80,
     priceUnit: 'per_day',
-    bedConfiguration: '4 Camas Individuales',
+    bedConfiguration: '2 Literas',
   },
   {
     id: 'double',
@@ -86,7 +86,7 @@ export const ROOM_TYPES: RoomType[] = [
     image: 'https://picsum.photos/seed/double/600/400',
     price: 60,
     priceUnit: 'per_day',
-    bedConfiguration: '1 Cama Doble',
+    bedConfiguration: '2 Camas Individuales',
   },
   {
     id: 'single',
@@ -101,14 +101,14 @@ export const ROOM_TYPES: RoomType[] = [
   },
   {
     id: 'bunk',
-    name: 'Habitación con 2 Literas',
-    description: 'Una opción divertida y económica. Capacidad para 4 personas.',
-    capacity: 4,
+    name: 'Habitación Doble (Litera)',
+    description: 'Habitación acogedora con una litera. Capacidad para 2 personas.',
+    capacity: 2,
     available: 8,
     image: 'https://picsum.photos/seed/bunk/600/400',
-    price: 70,
+    price: 55,
     priceUnit: 'per_day',
-    bedConfiguration: '2 Literas',
+    bedConfiguration: '1 Litera',
   },
   {
     id: 'triple',
@@ -119,18 +119,18 @@ export const ROOM_TYPES: RoomType[] = [
     image: 'https://picsum.photos/seed/triple/600/400',
     price: 75,
     priceUnit: 'per_day',
-    bedConfiguration: '3 Camas Individuales',
+    bedConfiguration: '1 Cama Matrimonio + 1 Cama Individual o Litera',
   },
   {
     id: 'special',
-    name: 'Habitación Especial',
-    description: 'Perfecta para parejas. Capacidad para 2 personas.',
-    capacity: 2,
+    name: 'Habitación Especial (Adaptada)',
+    description: 'Habitación individual adaptada para personas con movilidad reducida.',
+    capacity: 1,
     available: 2,
     image: 'https://picsum.photos/seed/special/600/400',
-    price: 85,
+    price: 50,
     priceUnit: 'per_day',
-    bedConfiguration: '1 Cama de Matrimonio',
+    bedConfiguration: '1 Cama Individual Adaptada',
   },
 ];
 
