@@ -24,57 +24,52 @@
     .animate-fade-in-up {
         animation: fade-in-up 0.5s ease-out forwards;
     }
+    
     @media print {
-      body.printing-calendar {
-        /* Landscape-specific styles will be injected by JS */
-      }
-      body:not(.printing-calendar) * {
+      /* Hide everything on the page by default */
+      body * {
         visibility: hidden;
       }
+      /* Only show the element with .printable-area and its children */
       .printable-area, .printable-area * {
         visibility: visible;
       }
+      /* Position the printable area to take over the whole screen */
       .printable-area {
-        position: static; /* Changed from absolute to prevent blank pages */
+        position: absolute;
+        left: 0;
+        top: 0;
         width: 100%;
         box-shadow: none !important;
-        border: none;
+        border: none !important;
       }
+      /* Ensure elements that should never be printed are truly gone */
        .no-print {
         display: none !important;
       }
-      .break-before-page {
-        page-break-before: always;
+      /* Define the page layout for the printer */
+      @page {
+        size: landscape;
+        margin: 1cm;
       }
-    }
-    
-    /* These styles are only activated when body has 'printing-calendar' class */
-    @media print {
-      body.printing-calendar .printable-area * {
-        visibility: visible;
-      }
-      body.printing-calendar #root > div > *:not(.printable-area) {
-        display: none;
-      }
-      body.printing-calendar .printable-area {
-        visibility: visible;
-        position: static; /* Changed from absolute */
+      /* Fine-tune table styles for printing */
+      .printable-area table {
+        font-size: 7px;
         width: 100%;
+        table-layout: fixed;
       }
-      body.printing-calendar .printable-area table {
-        font-size: 7px; /* Fine-tune font size */
-        width: 100%;
-        table-layout: fixed; /* Important for consistent column widths */
-      }
-      body.printing-calendar .printable-area th,
-      body.printing-calendar .printable-area td {
+      .printable-area th,
+      .printable-area td {
         padding: 1px 2px;
         white-space: normal;
         word-break: break-word;
         overflow: hidden;
       }
-      body.printing-calendar .printable-area .sticky {
+      .printable-area .sticky {
         position: static; /* Remove sticky positioning for print */
+      }
+      .break-before-page {
+        page-break-before: always;
       }
     }
   </style>

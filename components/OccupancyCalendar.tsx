@@ -78,31 +78,21 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
     const printableElement = document.getElementById('occupancy-calendar-printable-area');
     if (!printableElement) return;
 
-    const style = document.createElement('style');
-    style.innerHTML = `@page { size: landscape; margin: 10mm; }`;
-    style.id = 'landscape-print-style';
-    
+    // Add the class that the print CSS in index.html looks for
+    printableElement.classList.add('printable-area');
+
     const cleanup = () => {
-        printableElement.classList.remove('printable-area');
-        document.body.classList.remove('printing-calendar');
-        const styleElement = document.getElementById('landscape-print-style');
-        if (styleElement) {
-            document.head.removeChild(styleElement);
-        }
-        window.removeEventListener('afterprint', cleanup);
+      // Remove the class after printing is done or cancelled
+      printableElement.classList.remove('printable-area');
+      window.removeEventListener('afterprint', cleanup);
     };
 
     window.addEventListener('afterprint', cleanup);
-    
-    document.head.appendChild(style);
-    document.body.classList.add('printing-calendar');
-    printableElement.classList.add('printable-area');
-    
-    // Use a more generous timeout to ensure styles are applied before printing, fixing the blank page issue.
-    setTimeout(() => {
-        window.print();
-    }, 250);
+
+    // Trigger the browser's print dialog
+    window.print();
   };
+
 
   const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
