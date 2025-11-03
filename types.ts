@@ -1,4 +1,5 @@
 
+
 export interface RoomType {
   id: string;
   name: string;
@@ -69,6 +70,7 @@ export interface IndividualRoom {
     id: string; // quad_1
     type: string; // quad
     name: string; // Habitación Cuádruple 1
+    description?: string;
 }
 
 export interface GroupedReservation {

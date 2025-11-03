@@ -116,7 +116,7 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
         <table className="w-full border-collapse text-center">
           <thead>
             <tr>
-              <th className="sticky left-0 bg-slate-100 p-2 border border-slate-200 z-10 font-semibold text-slate-600 min-w-[150px]">Habitación/Servicio</th>
+              <th className="sticky left-0 bg-slate-100 p-2 border border-slate-200 z-10 font-semibold text-slate-600 min-w-[200px]">Habitación/Servicio</th>
               {Array.from({ length: daysInMonth }, (_, i) => {
                 const day = i + 1;
                 const date = new Date(year, month, day);
@@ -131,8 +131,9 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
           <tbody>
             {rooms.map(room => (
               <tr key={room.id}>
-                <td className={`sticky left-0 p-2 border-slate-200 z-10 text-sm text-left font-medium whitespace-nowrap ${getRoomTypeColor(room.type)}`}>
-                    {room.name}
+                <td className={`sticky left-0 p-2 border-slate-200 z-10 text-sm text-left font-medium ${getRoomTypeColor(room.type)}`}>
+                  <div className="font-bold whitespace-nowrap">{room.name}</div>
+                  {room.description && <div className="text-xs font-normal text-slate-600 whitespace-normal max-w-[250px]">{room.description}</div>}
                 </td>
                 {Array.from({ length: daysInMonth }, (_, i) => {
                   const day = i + 1;
