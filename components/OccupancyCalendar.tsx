@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { IndividualRoom, Reservation, IndividualReservation } from '../types';
 import { PrintIcon } from './icons/PrintIcon';
@@ -74,22 +75,35 @@ const OccupancyCalendar: React.FC<OccupancyCalendarProps> = ({ rooms, reservatio
   
   const handlePrint = () => {
     const printableElement = document.getElementById('occupancy-calendar-printable-area');
+    if (!printableElement) return;
+
     const style = document.createElement('style');
-    style.innerHTML = `@page { size: landscape; margin: 20px; }`;
+    // Set landscape orientation and adjust margins for printing
+    style.innerHTML = `@page { size: landscape; margin: 10mm; }`;
     style.id = 'landscape-print-style';
     
-    document.head.appendChild(style);
-    document.body.classList.add('printing-calendar');
-    
-    if (printableElement) {
-        printableElement.classList.add('printable-area');
-        window.print();
-        
-        // Cleanup after print dialog is closed or cancelled
+    const cleanup = () => {
+        // This function will be called after the print dialog is closed
         printableElement.classList.remove('printable-area');
         document.body.classList.remove('printing-calendar');
-        document.head.removeChild(style);
-    }
+        const styleElement = document.getElementById('landscape-print-style');
+        if (styleElement) {
+            document.head.removeChild(styleElement);
+        }
+        // Remove the event listener to avoid memory leaks
+        window.removeEventListener('afterprint', cleanup);
+    };
+
+    // Add an event listener for after printing
+    window.addEventListener('afterprint', cleanup);
+    
+    // Add the styles and classes needed for printing
+    document.head.appendChild(style);
+    document.body.classList.add('printing-calendar');
+    printableElement.classList.add('printable-area');
+    
+    // Trigger the print dialog
+    window.print();
   };
 
   const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
