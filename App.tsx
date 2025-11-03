@@ -1,7 +1,8 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { RoomSelection, BookingDetails, Reservation, GroupedReservation, GroupedReservationWithCost, TimeSlot, ServiceBooking, FiscalDetails, IndividualReservation } from './types';
-import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, MOCK_RESERVATIONS, ALL_ROOMS_DATA, MOCK_INDIVIDUAL_RESERVATIONS } from './constants';
+import { ROOM_TYPES, SERVICE_TYPES, ALL_INDIVIDUAL_ITEMS, MOCK_RESERVATIONS, ALL_ROOMS_DATA, MOCK_INDIVIDUAL_RESERVATIONS, INDIVIDUAL_ROOMS } from './constants';
 import RoomTypeCard from './components/RoomTypeCard';
 import BookingSummary from './components/BookingSummary';
 import { generateBookingConfirmation } from './services/geminiService';
@@ -18,11 +19,8 @@ import RoomStatusView from './components/RoomStatusView';
 import IndividualReservationsView from './components/IndividualReservationsView';
 import IndividualBookingForm from './components/IndividualBookingForm';
 import IndividualReservationPrintView from './components/IndividualReservationPrintView';
-// FIX: Import the DiningHallView component to be used in the main app layout.
-import DiningHallView from './components/DiningHallView';
 
-// FIX: Added 'dining_hall' to the View type to allow navigation to the dining hall summary.
-type View = 'dashboard' | 'booking' | 'individual_reservation' | 'calendar' | 'reservations' | 'services' | 'invoice' | 'settings' | 'room_status' | 'dining_hall';
+type View = 'dashboard' | 'booking' | 'individual_reservation' | 'calendar' | 'reservations' | 'services' | 'invoice' | 'settings' | 'room_status';
 type BookingStep = 'options' | 'schedule' | 'loading' | 'confirmed';
 
 const today = new Date();
@@ -41,8 +39,6 @@ const initialDetails: BookingDetails = {
     observations: '',
     otherServices: {},
     unitServices: {},
-    // FIX: Initialize dining property in the booking details.
-    dining: {},
 };
 
 const initialFiscalDetails: FiscalDetails = {
@@ -219,8 +215,6 @@ const App: React.FC = () => {
           checkOut: bookingDetails.checkOut,
           otherServices: bookingDetails.otherServices,
           unitServices: bookingDetails.unitServices,
-          // FIX: Persist dining information when saving the booking.
-          dining: bookingDetails.dining,
         });
       });
     }
@@ -275,8 +269,6 @@ const App: React.FC = () => {
         observations: firstRes.observations,
         otherServices: group.otherServicesSummary,
         unitServices: group.unitServicesSummary,
-        // FIX: Load dining information when starting to edit a reservation.
-        dining: group.diningSummary,
       });
     }
 
@@ -306,8 +298,6 @@ const App: React.FC = () => {
         roomSummary,
         otherServicesSummary: firstRes.otherServices || {},
         unitServicesSummary: firstRes.unitServices || {},
-        // FIX: Include dining summary when creating a group to edit.
-        diningSummary: firstRes.dining || {},
         totalGuests: 0, 
         reservations: guestReservations,
     };
@@ -792,7 +782,7 @@ const App: React.FC = () => {
             />
         )}
         {view === 'calendar' && (
-           <OccupancyCalendar rooms={ALL_INDIVIDUAL_ITEMS} reservations={reservations} individualReservations={individualReservations} />
+           <OccupancyCalendar rooms={INDIVIDUAL_ROOMS} reservations={reservations} individualReservations={individualReservations} />
         )}
         {view === 'room_status' && (
             <RoomStatusView reservations={reservations} individualReservations={individualReservations} allRooms={ALL_ROOMS_DATA} roomTypes={ROOM_TYPES} />
@@ -826,10 +816,6 @@ const App: React.FC = () => {
                 onExport={handleExportData}
                 onImport={handleImportData}
             />
-        )}
-        {/* FIX: Render the DiningHallView component when the corresponding view is active. */}
-        {view === 'dining_hall' && (
-           <DiningHallView reservations={reservations} />
         )}
         {view === 'invoice' && invoiceData && (
           <InvoiceView group={invoiceData} onBack={() => setView('reservations')} fiscalDetails={fiscalDetails} />

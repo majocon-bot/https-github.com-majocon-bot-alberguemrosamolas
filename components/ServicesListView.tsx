@@ -1,4 +1,5 @@
 
+
 import React, { useMemo } from 'react';
 import { Reservation, GroupedReservation, ServiceBooking, TimeSlot } from '../types';
 import { SERVICE_TYPES } from '../constants';
@@ -36,8 +37,6 @@ const ServicesListView: React.FC<ServicesListViewProps> = ({ reservations, onDel
             minCheckIn: res.checkIn,
             maxCheckOut: res.checkOut,
             roomSummary: {},
-            // FIX: Initialize diningSummary when creating a new group.
-            diningSummary: res.dining || {},
             otherServicesSummary: res.otherServices || {},
             unitServicesSummary: res.unitServices || {},
             totalGuests: 0,

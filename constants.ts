@@ -133,6 +133,15 @@ export const ROOM_TYPES: RoomType[] = [
   },
 ];
 
+// FIX: Added and exported DINING_OPTIONS constant.
+export const DINING_OPTIONS: { id: keyof DiningSelection; label: string }[] = [
+    { id: 'breakfast', label: 'Desayuno' },
+    { id: 'morningSnack', label: 'Almuerzo' },
+    { id: 'lunch', label: 'Comida' },
+    { id: 'afternoonSnack', label: 'Merienda' },
+    { id: 'dinner', label: 'Cena' },
+];
+
 export const SERVICE_TYPES: RoomType[] = [
   {
     id: 'small_hall',
@@ -184,15 +193,6 @@ export const SERVICE_TYPES: RoomType[] = [
     price: 0.07,
     priceUnit: 'one_time',
   },
-];
-
-// FIX: Added DINING_OPTIONS constant for use in dining-related components.
-export const DINING_OPTIONS: { id: keyof DiningSelection, label: string }[] = [
-    { id: 'breakfast', label: 'Desayuno' },
-    { id: 'morningSnack', label: 'Almuerzo' },
-    { id: 'lunch', label: 'Comida' },
-    { id: 'afternoonSnack', label: 'Merienda' },
-    { id: 'dinner', label: 'Cena' },
 ];
 
 export const INDIVIDUAL_ROOMS: IndividualRoom[] = ALL_ROOMS_DATA.map(room => ({
@@ -267,15 +267,15 @@ export const MOCK_RESERVATIONS: Reservation[] = [
             'secretarial_services': 25
         },
     },
-    // FIX: Added mock dining data for testing purposes.
+    // FIX: Added sample dining data.
     dining: {
         [formatDate(new Date(today.getFullYear(), today.getMonth(), 7))]: {
-            breakfast: 2, lunch: 2, dinner: 0, morningSnack: 0, afternoonSnack: 0
+            breakfast: 2, lunch: 2, dinner: 0, morningSnack: 0, afternoonSnack: 0,
         },
         [formatDate(new Date(today.getFullYear(), today.getMonth(), 8))]: {
-            breakfast: 2, lunch: 0, dinner: 2, morningSnack: 0, afternoonSnack: 0
+            breakfast: 2, lunch: 0, dinner: 2, morningSnack: 0, afternoonSnack: 0,
         },
-    }
+    },
   },
    { 
     id: 'res2b', 
